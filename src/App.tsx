@@ -41,6 +41,7 @@ import { ExportModal } from './components/ExportModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AddCustomCourseModal } from './components/AddCustomCourseModal';
 import { LoginPage } from './components/LoginPage';
+import { calculateLearningMetrics } from './services/learningMetrics';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
@@ -186,31 +187,14 @@ export const App: React.FC = () => {
     const completedCourseIds = allMilestones
       .filter((m) => m.status === 'Completed')
       .map((m) => m.course.id);
-    const totalHoursLearned = studyRecords.reduce((total, record) => total + record.hours, 0);
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const weeklyVelocityHours = studyRecords
-      .filter((record) => new Date(record.completedAt).getTime() >= weekAgo)
-      .reduce((total, record) => total + record.hours, 0);
-    const activeDates = new Set(studyRecords.map((record) => record.completedAt.slice(0, 10)));
-    let studyStreakDays = 0;
-    const cursor = new Date();
-    while (activeDates.has(cursor.toISOString().slice(0, 10))) {
-      studyStreakDays += 1;
-      cursor.setUTCDate(cursor.getUTCDate() - 1);
-    }
-    const baselineScores = Object.fromEntries(
-      Object.keys(profile.baselineScores || {}).map((skill) => [skill, 0])
-    ) as Record<string, number>;
-    studyRecords.forEach((record) => record.skills.forEach((skill) => {
-      baselineScores[skill] = Math.min(100, (baselineScores[skill] || 0) + 10);
-    }));
+    const metrics = calculateLearningMetrics(
+      studyRecords,
+      Object.keys(profile.baselineScores || {}),
+    );
 
     updateActiveProfile({
       completedCourseIds,
-      totalHoursLearned,
-      weeklyVelocityHours,
-      studyStreakDays,
-      baselineScores,
+      ...metrics,
     });
 
     saveActiveRoadmap(updatedRoadmap);
@@ -235,7 +219,23 @@ export const App: React.FC = () => {
       if (firstPhase && firstPhase.milestones.length > 0) {
         handleToggleMilestoneStatus(firstPhase.milestones[0].id, 'Completed');
       }
+      return;
     }
+    const adaptedPhases = roadmap.phases.map((phase) => {
+      if (action === 'inject_prereq') {
+        const firstLocked = phase.milestones.findIndex((milestone) => milestone.status === 'Locked');
+        if (firstLocked >= 0) {
+          return { ...phase, milestones: phase.milestones.map((milestone, index) => index === firstLocked ? { ...milestone, status: 'Available' as const } : milestone) };
+        }
+      }
+      if (action === 'reorder') {
+        return { ...phase, milestones: [...phase.milestones].reverse() };
+      }
+      return phase;
+    });
+    const adaptedRoadmap = { ...roadmap, phases: adaptedPhases, updatedAt: new Date().toISOString() };
+    saveActiveRoadmap(adaptedRoadmap);
+    setRoadmap(adaptedRoadmap);
   };
 
   return (

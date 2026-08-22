@@ -23,6 +23,7 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
   const [sortBy, setSortBy] = useState<'relevance' | 'rating_desc' | 'duration_asc' | 'newest'>('relevance');
   const [serverResults, setServerResults] = useState<{ total: number; page: number; pageSize: number; results: Course[] }>({ total: 0, page: 1, pageSize, results: [] });
   const [isLoading, setIsLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const skillOptions = getAllSkills();
   const [explainForCourse, setExplainForCourse] = useState<null | { course: Course; breakdownHtml?: string; breakdown?: any }>(null);
   const [activeProfile, setActiveProfile] = useState(() => getActiveProfile());
@@ -61,6 +62,7 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
     let cancelled = false;
     const run = async () => {
       setIsLoading(true);
+      setCatalogError(null);
       const skills = selectedSkill === 'All' ? [] : [selectedSkill];
       try {
         const res = await fetchCourses({
@@ -75,6 +77,7 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
         if (!cancelled) setServerResults(res);
       } catch (e) {
         console.error('Catalog fetch error', e);
+        if (!cancelled) setCatalogError('Catalog could not be loaded. Please try again.');
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -165,7 +168,10 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
       </div>
 
       {/* Catalog Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading && <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-8 text-center text-sm text-on-surface-variant">Loading courses...</div>}
+      {catalogError && !isLoading && <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-8 text-center text-sm text-rose-700">{catalogError}</div>}
+      {!isLoading && !catalogError && pagedCatalog.length === 0 && <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-8 text-center text-sm text-on-surface-variant">No courses match these filters.</div>}
+      {!isLoading && !catalogError && pagedCatalog.length > 0 && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {pagedCatalog.map((course) => (
           <div
             key={course.id}
@@ -240,11 +246,11 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-between mt-6">
-        <div className="text-xs text-on-surface-variant">Showing {Math.min(serverResults.total, pageSize)} of {serverResults.total} results</div>
+        <div className="text-xs text-on-surface-variant">Showing {serverResults.total === 0 ? 0 : (currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, serverResults.total)} of {serverResults.total} results</div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

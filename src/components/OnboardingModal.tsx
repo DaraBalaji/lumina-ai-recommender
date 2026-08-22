@@ -44,7 +44,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [hoursPerWeek, setHoursPerWeek] = useState(activeProfile.hoursPerWeek || 0);
   const [preferredFormat, setPreferredFormat] = useState<LearningFormat>(activeProfile.preferredFormat || 'Project-first');
   const [interests, setInterests] = useState<string[]>(activeProfile.interests || []);
-  const [assessmentAnswers, setAssessmentAnswers] = useState<Record<string, 'yes' | 'no'>>({});
+  const [assessmentAnswers, setAssessmentAnswers] = useState<Record<string, number>>({});
   const [budget, setBudget] = useState<ResourceCost | 'Any'>('Any');
 
   const [isAiParsing, setIsAiParsing] = useState(false);
@@ -106,16 +106,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const assessmentQuestions = [
-    { id: 'programming', label: 'I can write and debug a small program.', skills: ['Python Programming', 'JavaScript & TypeScript', 'Rust Language Fundamentals'] },
-    { id: 'data', label: 'I can clean data and explain basic statistics.', skills: ['Applied Statistics & Hypothesis Testing', 'Scikit-Learn Machine Learning', 'Feature Engineering'] },
-    { id: 'systems', label: 'I understand APIs, deployment, or cloud infrastructure.', skills: ['Cloud & Deployment (LangChain/LlamaIndex)', 'Cloud Platforms (GCP/AWS)', 'Docker & Containerization'] },
-    { id: 'ai', label: 'I have built or evaluated an AI/ML project.', skills: ['PyTorch & Deep Learning', 'Transformers & Attention', 'Prompt Engineering'] },
+    { id: 'programming', label: 'Which concept lets a program repeat a block of code?', options: ['Loop', 'Variable', 'Comment'], answer: 0, skills: ['Python Programming', 'JavaScript & TypeScript', 'Rust Language Fundamentals'] },
+    { id: 'data', label: 'Which tool is commonly used to work with tabular data in Python?', options: ['Pandas', 'React', 'Docker'], answer: 0, skills: ['Applied Statistics & Hypothesis Testing', 'Scikit-Learn Machine Learning', 'Feature Engineering'] },
+    { id: 'systems', label: 'What does an API primarily define?', options: ['How software components communicate', 'A color palette', 'A database password'], answer: 0, skills: ['Cloud & Deployment (LangChain/LlamaIndex)', 'Cloud Platforms (GCP/AWS)', 'Docker & Containerization'] },
+    { id: 'ai', label: 'What is a model trained to do?', options: ['Learn patterns from data', 'Replace all source code', 'Only store images'], answer: 0, skills: ['PyTorch & Deep Learning', 'Transformers & Attention', 'Prompt Engineering'] },
   ];
 
   const buildAssessmentScores = () => {
     const scores: Record<string, number> = { ...(activeProfile.baselineScores || {}) };
     assessmentQuestions.forEach((question) => {
-      const score = assessmentAnswers[question.id] === 'yes' ? 35 : 0;
+      const score = assessmentAnswers[question.id] === question.answer ? 45 : 0;
       question.skills.forEach((skill) => { scores[skill] = Math.max(scores[skill] || 0, score); });
     });
     return scores;
@@ -314,17 +314,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <label className="font-label-sm text-label-sm text-on-surface-variant block mb-2">Quick knowledge check</label>
               <div className="flex flex-col gap-2">
                 {assessmentQuestions.map((question) => (
-                  <div key={question.id} className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/30 p-3 text-xs">
-                    <span className="text-on-surface-variant">{question.label}</span>
-                    <div className="flex gap-1 shrink-0">
-                      {(['yes', 'no'] as const).map((answer) => (
-                        <button key={answer} type="button" onClick={() => setAssessmentAnswers((current) => ({ ...current, [question.id]: answer }))} className={`rounded-lg px-2.5 py-1 font-semibold ${assessmentAnswers[question.id] === answer ? 'bg-secondary text-on-secondary' : 'bg-surface-variant/40 text-on-surface-variant'}`}>{answer === 'yes' ? 'Yes' : 'Not yet'}</button>
+                  <div key={question.id} className="rounded-xl border border-outline-variant/30 p-3 text-xs">
+                    <span className="text-on-surface-variant block mb-2">{question.label}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {question.options.map((option, answerIndex) => (
+                        <button key={option} type="button" onClick={() => setAssessmentAnswers((current) => ({ ...current, [question.id]: answerIndex }))} className={`rounded-lg px-2.5 py-1 font-semibold ${assessmentAnswers[question.id] === answerIndex ? 'bg-secondary text-on-secondary' : 'bg-surface-variant/40 text-on-surface-variant'}`}>{option}</button>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] text-on-surface-variant">Scores start from your answers and grow only through recorded learning.</p>
+              <p className="mt-2 text-[11px] text-on-surface-variant">Correct answers provide an initial evidence score. Mastery grows only through recorded learning.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
