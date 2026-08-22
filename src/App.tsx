@@ -38,7 +38,6 @@ import { Dashboard } from './components/Dashboard';
 import { LuminaAssistant } from './components/LuminaAssistant';
 import { CourseCatalogView } from './components/CourseCatalogView';
 import { ExportModal } from './components/ExportModal';
-import { SettingsModal } from './components/SettingsModal';
 import { AddCustomCourseModal } from './components/AddCustomCourseModal';
 import { LoginPage } from './components/LoginPage';
 import { calculateLearningMetrics } from './services/learningMetrics';
@@ -53,7 +52,6 @@ export const App: React.FC = () => {
 
   // Modals
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAddCustomOpen, setIsAddCustomOpen] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
@@ -257,7 +255,6 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         activeProfile={profile}
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -392,11 +389,6 @@ export const App: React.FC = () => {
         onClose={() => setIsExportOpen(false)}
         roadmap={roadmap}
         profile={profile}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
       />
 
       <AddCustomCourseModal

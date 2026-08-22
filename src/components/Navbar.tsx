@@ -4,7 +4,6 @@ import {
   BookOpen,
   Compass,
   BarChart3,
-  Key,
   Sun,
   Moon,
   Plus,
@@ -17,7 +16,6 @@ interface NavbarProps {
   setActiveTab: (tab: 'landing' | 'roadmap' | 'dashboard' | 'catalog') => void;
   activeProfile: LearnerProfile;
   onOpenOnboarding: () => void;
-  onOpenSettings: () => void;
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -28,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   activeProfile,
   onOpenOnboarding,
-  onOpenSettings,
   onLogout,
   theme,
   onToggleTheme,
@@ -126,14 +123,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </button>
 
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant/50 transition-colors"
-            title="API Settings & Key"
-          >
-            <Key className="w-5 h-5" />
-          </button>
           <button
             onClick={onLogout}
             className="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant/50 transition-colors"

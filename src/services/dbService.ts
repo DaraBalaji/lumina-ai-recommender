@@ -15,7 +15,6 @@ const getInitialDB = (): LocalDBSchema => {
     chatHistory: {},
     notes: {},
     studyRecords: {},
-    apiKey: '',
     theme: 'light',
   };
 };
@@ -65,7 +64,7 @@ export const saveDB = (db: LocalDBSchema): void => {
       void fetch('/api/workspace', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, data: { ...db, apiKey: '' } }),
+        body: JSON.stringify({ userId, data: db }),
       }).catch((error) => console.warn('Workspace sync unavailable:', error));
     }
   } catch (e) {

@@ -153,6 +153,5 @@ export interface LocalDBSchema {
   chatHistory: Record<string, ChatMessage[]>; // ProfileId -> Messages
   notes: Record<string, string>; // MilestoneId -> Note text
   studyRecords: Record<string, StudyRecord[]>; // ProfileId -> completed study records
-  apiKey: string;
   theme: 'light' | 'dark';
 }
