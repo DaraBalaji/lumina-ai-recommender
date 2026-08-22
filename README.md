@@ -11,7 +11,7 @@ Lumina is a Vite + React learning-path application with Gemini chat and a local 
    mongodb://127.0.0.1:27017
    ```
 
-3. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
+3. Copy `.env.example` to `.env` and set the server-only `GEMINI_API_KEY`.
 4. Install and run the app:
 
    ```bash

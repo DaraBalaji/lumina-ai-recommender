@@ -1,5 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
-import { getApiKey } from './dbService';
 import {
   LearnerProfile,
   TargetRole,
@@ -12,21 +10,13 @@ import {
 import { TARGET_ROLES } from '../data/skillTaxonomy';
 import { explainCourseScore, calculateSkillGaps } from './recommendationEngine';
 
-let genAIInstance: GoogleGenAI | null = null;
-
-const getGenAI = (): GoogleGenAI | null => {
-  const key = getApiKey();
-  if (!key) return null;
-  if (!genAIInstance) {
-    try {
-      genAIInstance = new GoogleGenAI({ apiKey: key });
-    } catch (e) {
-      console.warn('Could not initialize GoogleGenAI client, using local heuristic AI:', e);
-      return null;
-    }
-  }
-  return genAIInstance;
+type ServerOnlyAiClient = {
+  models: {
+    generateContent: (request: { model: string; contents: string }) => Promise<{ text?: string }>;
+  };
 };
+
+const getGenAI = (): ServerOnlyAiClient | null => null;
 
 // 1. Natural Language Goal Parser
 export interface ParsedGoalResult {

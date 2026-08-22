@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { X, Key, Check, Sparkles, ShieldCheck } from 'lucide-react';
-import { getApiKey, saveApiKey } from '../services/dbService';
+import React from 'react';
+import { X, Key, ShieldCheck } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -8,20 +7,7 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const [apiKey, setApiKey] = useState(getApiKey());
-  const [isSaved, setIsSaved] = useState(false);
-
   if (!isOpen) return null;
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveApiKey(apiKey.trim());
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-      onClose();
-    }, 1200);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/60 backdrop-blur-md animate-in fade-in">
@@ -48,59 +34,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="font-label-md text-xs font-bold text-primary dark:text-on-primary-fixed flex items-center justify-between">
               <span>Google Gemini API Key</span>
               <span className="text-[10px] text-secondary font-semibold">Fixed</span>
             </label>
-            <input
-              type="password"
-              value={apiKey}
-              readOnly
-              className="w-full rounded-2xl border border-outline-variant/40 p-3 text-xs bg-surface-container-lowest dark:bg-inverse-surface text-on-surface cursor-not-allowed"
-            />
             <p className="text-[11px] text-on-surface-variant mt-1">
-              This application uses the built-in Gemini key automatically, so the user does not need to provide one manually.
+              Gemini is managed by the application server. You do not need to provide or change an API key.
             </p>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-secondary-container/30 border border-secondary-container text-xs text-on-secondary-container flex items-start gap-2.5">
             <ShieldCheck className="w-5 h-5 text-secondary shrink-0" />
             <div>
-              <span className="font-bold block">100% Secure & Local</span>
+                <span className="font-bold block">Server-managed AI</span>
               <span className="text-[11px]">
-                Your API key is stored securely in your browser's client-side storage and is only used for direct AI inference.
+                The API key is kept in the server environment and is never editable or stored in your browser.
               </span>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-full border border-outline-variant text-on-surface-variant text-xs font-semibold hover:bg-surface-variant/40"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-full bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container flex items-center gap-2"
-            >
-              {isSaved ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-secondary-container" />
-                  <span>Save Configuration</span>
-                </>
-              )}
-            </button>
+          <div className="flex justify-end pt-2">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-full bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container">Close</button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

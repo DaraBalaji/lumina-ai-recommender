@@ -15,7 +15,7 @@ const getInitialDB = (): LocalDBSchema => {
     chatHistory: {},
     notes: {},
     studyRecords: {},
-    apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+    apiKey: '',
     theme: 'light',
   };
 };
@@ -169,17 +169,6 @@ export const saveChatHistory = (messages: ChatMessage[]): void => {
 };
 
 // Settings (API Key & Theme)
-export const getApiKey = (): string => {
-  const db = loadDB();
-  return (db.apiKey && db.apiKey.trim()) || import.meta.env.VITE_GEMINI_API_KEY || '';
-};
-
-export const saveApiKey = (key: string): void => {
-  const db = loadDB();
-  db.apiKey = key ? key.trim() : '';
-  saveDB(db);
-};
-
 export const getTheme = (): 'light' | 'dark' => {
   const db = loadDB();
   return db.theme || 'light';
