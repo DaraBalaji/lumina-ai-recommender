@@ -43,6 +43,7 @@ import { LoginPage } from './components/LoginPage';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
+  const [isAuthPageOpen, setIsAuthPageOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'landing' | 'roadmap' | 'dashboard' | 'catalog'>('landing');
   const [profile, setProfile] = useState<LearnerProfile>(getActiveProfile);
   const [roadmap, setRoadmap] = useState<Roadmap | null>(getActiveRoadmap);
@@ -119,11 +120,13 @@ export const App: React.FC = () => {
     updateActiveProfile({ name: result.user.name });
     setProfile(getActiveProfile());
     setIsAuthenticated(true);
+    setIsAuthPageOpen(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('lumina_authenticated');
     setIsAuthenticated(false);
+    setIsAuthPageOpen(false);
   };
 
   // Toggle Milestone Status (Completed / In-Progress / Available)
@@ -233,7 +236,17 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background transition-colors duration-300">
       {/* Navbar Header */}
-      {!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <>
+      {!isAuthenticated ? (
+        isAuthPageOpen ? (
+          <LoginPage onLogin={handleLogin} onBackToHome={() => setIsAuthPageOpen(false)} />
+        ) : (
+          <HeroLanding
+            onStartOnboarding={() => setIsAuthPageOpen(true)}
+            onExploreCurriculum={() => setIsAuthPageOpen(true)}
+            onOpenAuth={() => setIsAuthPageOpen(true)}
+          />
+        )
+      ) : <>
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}

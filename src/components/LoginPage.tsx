@@ -3,9 +3,10 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (name: string, email: string, password: string, mode: 'signin' | 'signup') => Promise<void>;
+  onBackToHome?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +73,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
         </form>
         <p className="mt-5 text-center text-[11px] text-on-surface-variant">Accounts are stored in your local MongoDB database.</p>
+        {onBackToHome && <button type="button" onClick={onBackToHome} className="mt-3 w-full text-xs font-semibold text-secondary hover:underline">Back to home</button>}
       </section>
     </main>
   );

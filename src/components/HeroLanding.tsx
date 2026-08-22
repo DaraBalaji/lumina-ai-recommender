@@ -14,11 +14,13 @@ import {
 interface HeroLandingProps {
   onStartOnboarding: () => void;
   onExploreCurriculum: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartOnboarding,
   onExploreCurriculum,
+  onOpenAuth,
 }) => {
   return (
     <div className="flex flex-col gap-24 py-8">
@@ -50,17 +52,17 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 justify-center md:justify-start">
               <button
-                onClick={onStartOnboarding}
+                onClick={onOpenAuth || onStartOnboarding}
                 className="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
               >
-                <span>Get Started Now</span>
+                <span>{onOpenAuth ? 'Sign in to get started' : 'Get Started Now'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
-                onClick={onExploreCurriculum}
+                onClick={onOpenAuth || onExploreCurriculum}
                 className="w-full sm:w-auto px-8 py-4 bg-surface-container-lowest dark:bg-inverse-surface border-2 border-secondary text-secondary dark:text-secondary-fixed rounded-full font-label-md text-label-md hover:bg-secondary/5 transition-colors"
               >
-                Explore 150+ Catalog
+                {onOpenAuth ? 'Create your learning account' : 'Explore 150+ Catalog'}
               </button>
             </div>
           </div>
