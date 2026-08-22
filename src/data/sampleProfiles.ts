@@ -9,6 +9,8 @@ export const INITIAL_DEFAULT_PROFILE: LearnerProfile = {
   currentSkillLevel: 'Beginner',
   hoursPerWeek: 0,
   preferredFormat: 'Project-first',
+  interests: [],
+  assessmentCompletedAt: undefined,
   budget: 'Any',
   targetTimelineMonths: 6,
   baselineScores: {

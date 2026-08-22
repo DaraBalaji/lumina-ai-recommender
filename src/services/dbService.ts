@@ -60,8 +60,31 @@ export const saveDB = (db: LocalDBSchema): void => {
   try {
     localStorage.setItem(DB_KEY, JSON.stringify(db));
     notifyListeners(db);
+    const userId = localStorage.getItem('lumina_account_id');
+    if (userId) {
+      void fetch('/api/workspace', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, data: { ...db, apiKey: '' } }),
+      }).catch((error) => console.warn('Workspace sync unavailable:', error));
+    }
   } catch (e) {
     console.error('Failed to save Lumina database:', e);
+  }
+};
+
+export const loadRemoteWorkspace = async (userId: string): Promise<LocalDBSchema | null> => {
+  try {
+    const response = await fetch(`/api/workspace?userId=${encodeURIComponent(userId)}`);
+    if (!response.ok) return null;
+    const result = await response.json() as { data?: LocalDBSchema | null };
+    if (!result.data) return null;
+    localStorage.setItem(DB_KEY, JSON.stringify(result.data));
+    notifyListeners(result.data);
+    return result.data;
+  } catch (error) {
+    console.warn('Remote workspace load unavailable:', error);
+    return null;
   }
 };
 

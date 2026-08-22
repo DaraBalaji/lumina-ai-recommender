@@ -181,6 +181,7 @@ Learner Context:
 - Name: ${profile.name}
 - Target Role: ${profile.targetRoleTitle}
 - Skill Level: ${profile.currentSkillLevel}
+- Interests: ${profile.interests?.join(', ') || 'Not specified'}
 - Active Milestone Focus: ${activeMilestone ? activeMilestone.title : 'General Career Roadmap'}
 
 User Question / Request: "${userMessageText}"

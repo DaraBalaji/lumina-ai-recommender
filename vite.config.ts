@@ -91,6 +91,35 @@ export default defineConfig(({ mode }) => {
         }
       });
 
+      server.middlewares.use('/api/workspace', async (req, res, next) => {
+        if (!['GET', 'PUT'].includes(req.method || '')) return next();
+        try {
+          const requestUrl = new URL(req.url || '/', 'http://localhost');
+          const payload = req.method === 'PUT' ? await readBody(req) : {};
+          const userId = String(payload.userId || requestUrl.searchParams.get('userId') || '').trim();
+          if (!userId) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'A user id is required.' }));
+            return;
+          }
+          const client = await connectMongo();
+          const workspaces = client.db(mongoDbName).collection('workspaces');
+          if (req.method === 'GET') {
+            const workspace = await workspaces.findOne({ userId });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ data: workspace?.data || null }));
+            return;
+          }
+          const data = { ...(payload.data || {}), apiKey: '' };
+          await workspaces.updateOne({ userId }, { $set: { userId, data, updatedAt: new Date() } }, { upsert: true });
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ saved: true }));
+        } catch (error) {
+          res.statusCode = 503;
+          res.end(JSON.stringify({ error: 'Could not save workspace to MongoDB.' }));
+        }
+      });
+
       server.middlewares.use('/api/ai/chat', async (req, res, next) => {
         if (req.method !== 'POST') return next();
 
@@ -110,7 +139,7 @@ export default defineConfig(({ mode }) => {
           const userMessage = payload.message || '';
           const profile = payload.profile || {};
           const activeMilestone = payload.activeMilestone || null;
-          const systemPrompt = `You are Lumina Mentor, an empathetic, world-class AI learning coach & technical tutor. Learner: ${profile.name || 'Learner'}. Active milestone: ${activeMilestone ? activeMilestone.title : 'General'}`;
+          const systemPrompt = `You are Lumina Mentor, an empathetic, world-class AI learning coach & technical tutor. Learner: ${profile.name || 'Learner'}. Interests: ${(profile.interests || []).join(', ') || 'not specified'}. Active milestone: ${activeMilestone ? activeMilestone.title : 'General'}`;
 
           const response = await genAI.models.generateContent({
             model: 'gemini-3.6-flash',

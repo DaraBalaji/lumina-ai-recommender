@@ -91,7 +91,7 @@ export const explainCourseScore = (
   course.skillsCovered.forEach((skill) => {
     const gap = skillGaps.find((g) => g.skillName === skill);
     if (gap) {
-      gapRelevanceSum += gap.gapScore;
+      gapRelevanceSum += gap.gapScore + (profile.interests?.includes(skill) ? 15 : 0);
       matchedGaps.push({ skill, gapScore: gap.gapScore });
     }
   });

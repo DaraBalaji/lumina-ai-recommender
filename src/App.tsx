@@ -27,6 +27,7 @@ import {
   addCustomCourseToCatalog,
   getStudyRecords,
   saveStudyRecords,
+  loadRemoteWorkspace,
 } from './services/dbService';
 import { generatePersonalizedRoadmap } from './services/recommendationEngine';
 import { Navbar } from './components/Navbar';
@@ -116,15 +117,19 @@ export const App: React.FC = () => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Authentication failed.');
     localStorage.setItem('lumina_authenticated', 'true');
+    localStorage.setItem('lumina_account_id', result.user.id);
     localStorage.setItem('lumina_account_email', result.user.email);
+    await loadRemoteWorkspace(result.user.id);
     updateActiveProfile({ name: result.user.name });
     setProfile(getActiveProfile());
+    setRoadmap(getActiveRoadmap());
     setIsAuthenticated(true);
     setIsAuthPageOpen(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('lumina_authenticated');
+    localStorage.removeItem('lumina_account_id');
     setIsAuthenticated(false);
     setIsAuthPageOpen(false);
   };

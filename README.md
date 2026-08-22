@@ -19,6 +19,6 @@ Lumina is a Vite + React learning-path application with Gemini chat and a local 
    npm run dev
    ```
 
-5. Open the app and create an account. This creates the `lumina` database and `users` collection. The database status can be checked at `/api/db/status` while the Vite server is running.
+5. Open the app and create an account. This creates the `lumina` database and `users` collection. After sign-in, profiles, roadmaps, study records, chat history, notes, and custom courses are synchronized to the `workspaces` collection. The database status can be checked at `/api/db/status` while the Vite server is running.
 
 The `.env` file is ignored by Git and must never be committed. For deployment, use a hosted MongoDB connection string such as MongoDB Atlas in the deployment provider's environment variables.

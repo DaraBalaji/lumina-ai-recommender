@@ -15,6 +15,7 @@ import {
   ResourceCost,
 } from '../types';
 import { TARGET_ROLES } from '../data/skillTaxonomy';
+import { SKILL_CATEGORIES } from '../data/skillTaxonomy';
 import { parseNaturalLanguageGoal } from '../services/aiService';
 
 interface OnboardingModalProps {
@@ -42,6 +43,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [skillLevel, setSkillLevel] = useState<SkillLevel>(activeProfile.currentSkillLevel || 'Beginner');
   const [hoursPerWeek, setHoursPerWeek] = useState(activeProfile.hoursPerWeek || 0);
   const [preferredFormat, setPreferredFormat] = useState<LearningFormat>(activeProfile.preferredFormat || 'Project-first');
+  const [interests, setInterests] = useState<string[]>(activeProfile.interests || []);
+  const [assessmentAnswers, setAssessmentAnswers] = useState<Record<string, 'yes' | 'no'>>({});
   const [budget, setBudget] = useState<ResourceCost | 'Any'>('Any');
 
   const [isAiParsing, setIsAiParsing] = useState(false);
@@ -95,8 +98,27 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       hoursPerWeek,
       preferredFormat,
       budget,
+      interests,
+      baselineScores: buildAssessmentScores(),
+      assessmentCompletedAt: new Date().toISOString(),
     });
     onClose();
+  };
+
+  const assessmentQuestions = [
+    { id: 'programming', label: 'I can write and debug a small program.', skills: ['Python Programming', 'JavaScript & TypeScript', 'Rust Language Fundamentals'] },
+    { id: 'data', label: 'I can clean data and explain basic statistics.', skills: ['Applied Statistics & Hypothesis Testing', 'Scikit-Learn Machine Learning', 'Feature Engineering'] },
+    { id: 'systems', label: 'I understand APIs, deployment, or cloud infrastructure.', skills: ['Cloud & Deployment (LangChain/LlamaIndex)', 'Cloud Platforms (GCP/AWS)', 'Docker & Containerization'] },
+    { id: 'ai', label: 'I have built or evaluated an AI/ML project.', skills: ['PyTorch & Deep Learning', 'Transformers & Attention', 'Prompt Engineering'] },
+  ];
+
+  const buildAssessmentScores = () => {
+    const scores: Record<string, number> = { ...(activeProfile.baselineScores || {}) };
+    assessmentQuestions.forEach((question) => {
+      const score = assessmentAnswers[question.id] === 'yes' ? 35 : 0;
+      question.skills.forEach((skill) => { scores[skill] = Math.max(scores[skill] || 0, score); });
+    });
+    return scores;
   };
 
   return (
@@ -275,6 +297,34 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="font-label-sm text-label-sm text-on-surface-variant block mb-2">Topics you want to learn</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.values(SKILL_CATEGORIES).flat().filter((skill, index, skills) => skills.indexOf(skill) === index).map((skill) => (
+                  <button key={skill} type="button" onClick={() => setInterests((current) => current.includes(skill) ? current.filter((item) => item !== skill) : [...current, skill])} className={`rounded-full border px-3 py-1.5 text-[11px] font-medium ${interests.includes(skill) ? 'border-secondary bg-secondary-container/40 text-secondary' : 'border-outline-variant/40 text-on-surface-variant'}`}>
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="font-label-sm text-label-sm text-on-surface-variant block mb-2">Quick knowledge check</label>
+              <div className="flex flex-col gap-2">
+                {assessmentQuestions.map((question) => (
+                  <div key={question.id} className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/30 p-3 text-xs">
+                    <span className="text-on-surface-variant">{question.label}</span>
+                    <div className="flex gap-1 shrink-0">
+                      {(['yes', 'no'] as const).map((answer) => (
+                        <button key={answer} type="button" onClick={() => setAssessmentAnswers((current) => ({ ...current, [question.id]: answer }))} className={`rounded-lg px-2.5 py-1 font-semibold ${assessmentAnswers[question.id] === answer ? 'bg-secondary text-on-secondary' : 'bg-surface-variant/40 text-on-surface-variant'}`}>{answer === 'yes' ? 'Yes' : 'Not yet'}</button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-on-surface-variant">Scores start from your answers and grow only through recorded learning.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

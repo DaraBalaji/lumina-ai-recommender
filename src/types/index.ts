@@ -14,6 +14,8 @@ export interface LearnerProfile {
   currentSkillLevel: SkillLevel;
   hoursPerWeek: number;
   preferredFormat: LearningFormat;
+  interests: string[];
+  assessmentCompletedAt?: string;
   budget: ResourceCost | 'Any';
   targetTimelineMonths: number;
   baselineScores: Record<string, number>; // Skill -> Score 0-100
