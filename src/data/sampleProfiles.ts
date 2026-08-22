@@ -1,0 +1,31 @@
+import { LearnerProfile } from '../types';
+
+export const INITIAL_DEFAULT_PROFILE: LearnerProfile = {
+  id: 'profile-default',
+  name: 'New Learner',
+  avatarUrl: '',
+  targetRoleId: 'genai-engineer',
+  targetRoleTitle: 'Your Target Role',
+  currentSkillLevel: 'Beginner',
+  hoursPerWeek: 0,
+  preferredFormat: 'Project-first',
+  budget: 'Any',
+  targetTimelineMonths: 6,
+  baselineScores: {
+    'Python Programming': 0,
+    'Linear Algebra & Calculus': 0,
+    'PyTorch & Deep Learning': 0,
+    'Transformers & Attention': 0,
+    'Prompt Engineering': 0,
+    'Vector Databases & RAG': 0,
+    'Model Fine-Tuning (PEFT/LoRA)': 0,
+    'LLM Evaluation & Guardrails': 0,
+    'Cloud & Deployment (LangChain/LlamaIndex)': 0,
+  },
+  completedCourseIds: [],
+  inProgressMilestoneIds: [],
+  studyStreakDays: 0,
+  weeklyVelocityHours: 0,
+  totalHoursLearned: 0,
+  lastActiveDate: new Date().toISOString(),
+};
