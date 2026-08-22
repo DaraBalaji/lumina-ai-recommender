@@ -110,7 +110,7 @@ export default defineConfig(({ mode }) => {
             res.end(JSON.stringify({ data: workspace?.data || null }));
             return;
           }
-          const data = { ...(payload.data || {}), apiKey: '' };
+          const data = payload.data || {};
           await workspaces.updateOne({ userId }, { $set: { userId, data, updatedAt: new Date() } }, { upsert: true });
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ saved: true }));
