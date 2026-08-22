@@ -56,7 +56,8 @@ export default defineConfig(({ mode }) => {
           const payload = await readBody(req);
           const email = String(payload.email || '').trim().toLowerCase();
           const password = String(payload.password || '');
-          if (!email || password.length < 6 || (req.url === '/signup' && !String(payload.name || '').trim())) {
+          const name = String(payload.name || '').trim();
+          if (email.length > 254 || password.length < 6 || password.length > 128 || (req.url === '/signup' && (!name || name.length > 100))) {
             res.statusCode = 400;
             res.end(JSON.stringify({ error: 'Provide a valid email and password of at least 6 characters.' }));
             return;

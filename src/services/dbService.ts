@@ -85,8 +85,7 @@ const notifyListeners = (db: LocalDBSchema) => {
 // Profile CRUD
 export const getActiveProfile = (): LearnerProfile => {
   const db = loadDB();
-  const profile = db.profiles.find((p) => p.id === db.activeProfileId);
-  return profile || db.profiles[0] || INITIAL_DEFAULT_PROFILE;
+  return db.profiles.find((p) => p.id === db.activeProfileId) || db.profiles[0] || INITIAL_DEFAULT_PROFILE;
 };
 
 export const updateActiveProfile = (updates: Partial<LearnerProfile>): LearnerProfile => {
@@ -121,8 +120,8 @@ export const createNewProfile = (profile: LearnerProfile): LearnerProfile => {
 // Roadmap CRUD
 export const getActiveRoadmap = (): Roadmap | null => {
   const db = loadDB();
-  const activeProfile = getActiveProfile();
-  return db.roadmaps[activeProfile.id] || null;
+  const activeProfileId = db.activeProfileId || db.profiles[0]?.id;
+  return (activeProfileId && db.roadmaps[activeProfileId]) || null;
 };
 
 export const saveActiveRoadmap = (roadmap: Roadmap): void => {
@@ -183,12 +182,12 @@ export const saveMilestoneNote = (milestoneId: string, note: string): void => {
 
 export const getStudyRecords = (): StudyRecord[] => {
   const db = loadDB();
-  return db.studyRecords[getActiveProfile().id] || [];
+  return db.studyRecords[db.activeProfileId] || [];
 };
 
 export const saveStudyRecords = (records: StudyRecord[]): void => {
   const db = loadDB();
-  db.studyRecords[getActiveProfile().id] = records;
+  db.studyRecords[db.activeProfileId] = records;
   saveDB(db);
 };
 

@@ -23,21 +23,6 @@ export const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ onAddCours
   const [sortBy, setSortBy] = useState<'relevance' | 'rating_desc' | 'duration_asc' | 'newest'>('relevance');
   const [serverResults, setServerResults] = useState<{ total: number; page: number; pageSize: number; results: Course[] }>({ total: 0, page: 1, pageSize, results: [] });
   const [isLoading, setIsLoading] = useState(false);
-  const filteredCatalog = COURSE_CATALOG.filter((c) => {
-    const matchesSearch =
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.skillsCovered.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesDifficulty =
-      selectedDifficulty === 'All' || c.difficulty === selectedDifficulty;
-
-    const matchesCost = selectedCost === 'All' || c.cost === selectedCost;
-    const matchesSkill = selectedSkill === 'All' || c.skillsCovered.some((s) => s === selectedSkill);
-
-    return matchesSearch && matchesDifficulty && matchesCost && matchesSkill;
-  });
-
   const skillOptions = getAllSkills();
   const [explainForCourse, setExplainForCourse] = useState<null | { course: Course; breakdownHtml?: string; breakdown?: any }>(null);
   const [activeProfile, setActiveProfile] = useState(() => getActiveProfile());
