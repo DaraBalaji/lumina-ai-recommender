@@ -33,6 +33,23 @@ export default defineConfig(({ mode }) => {
         return timingSafeEqual(actual, Buffer.from(hash, 'hex'));
       };
 
+      server.middlewares.use('/api/db/status', async (req, res, next) => {
+        if (req.method !== 'GET') return next();
+        try {
+          const client = await connectMongo();
+          const database = client.db(mongoDbName);
+          const collections = await database.listCollections({ name: 'users' }).toArray();
+          if (collections.length === 0) await database.createCollection('users');
+          const userCount = await database.collection('users').countDocuments();
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ connected: true, database: mongoDbName, collection: 'users', userCount }));
+        } catch (error) {
+          res.statusCode = 503;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ connected: false, error: 'MongoDB is unavailable. Start the local MongoDB service and try again.' }));
+        }
+      });
+
       server.middlewares.use('/api/auth', async (req, res, next) => {
         if (req.method !== 'POST' || !['/signin', '/signup'].includes(req.url || '')) return next();
         try {
