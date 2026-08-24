@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { LearnerProfile, Roadmap, Milestone } from '../types';
 import { SkillRadarChart } from './SkillRadarChart';
+import { getStudyRecords } from '../services/dbService';
 
 interface DashboardProps {
   profile: LearnerProfile;
@@ -31,6 +32,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
     allMilestones.find((m) => m.status === 'In-Progress') ||
     allMilestones.find((m) => m.status === 'Available') ||
     allMilestones[0];
+  const studyRecords = getStudyRecords();
+  const today = new Date();
+  const activityDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    return {
+      key,
+      label: date.toLocaleDateString(undefined, { weekday: 'short' }),
+      records: studyRecords.filter((record) => record.completedAt.slice(0, 10) === key),
+    };
+  });
+  const completedSubtopics = allMilestones.reduce((total, milestone) => total + milestone.subtopics.filter((subtopic) => subtopic.completed).length, 0);
+  const totalSubtopics = allMilestones.reduce((total, milestone) => total + milestone.subtopics.length, 0);
 
   return (
     <div className="flex flex-col gap-10 pb-16">
@@ -159,6 +174,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
         </div>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass-panel p-6 rounded-3xl border border-outline-variant/30">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-headline-md text-base font-bold text-primary dark:text-on-primary-fixed">Learning activity</h2>
+              <p className="text-xs text-on-surface-variant mt-1">Every bar represents recorded checklist work.</p>
+            </div>
+            <span className="text-xs font-semibold text-secondary">{studyRecords.length} activities</span>
+          </div>
+          <div className="flex items-end justify-between gap-2 h-28">
+            {activityDays.map((day) => {
+              const hours = day.records.reduce((total, record) => total + record.hours, 0);
+              const height = hours > 0 ? Math.max(16, Math.min(100, hours * 12)) : 4;
+              return (
+                <div key={day.key} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                  <span className="text-[10px] text-on-surface-variant">{hours > 0 ? `${hours.toFixed(1)}h` : ''}</span>
+                  <div className={`w-full max-w-7 rounded-t-lg ${hours > 0 ? 'bg-secondary' : 'bg-surface-variant/50'}`} style={{ height: `${height}%` }} title={`${day.key}: ${hours.toFixed(1)} recorded hours`} />
+                  <span className="text-[10px] text-on-surface-variant">{day.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 rounded-3xl border border-outline-variant/30">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-headline-md text-base font-bold text-primary dark:text-on-primary-fixed">Course checklist progress</h2>
+              <p className="text-xs text-on-surface-variant mt-1">Finish topics to unlock full course credit.</p>
+            </div>
+            <span className="text-lg font-bold text-secondary">{completedSubtopics}/{totalSubtopics}</span>
+          </div>
+          <div className="h-3 rounded-full bg-surface-variant/60 overflow-hidden mb-4">
+            <div className="h-full rounded-full bg-secondary transition-all" style={{ width: `${totalSubtopics ? (completedSubtopics / totalSubtopics) * 100 : 0}%` }} />
+          </div>
+          <p className="text-xs text-on-surface-variant">{completedSubtopics ? `${completedSubtopics} subtopic${completedSubtopics === 1 ? '' : 's'} completed from your real activity.` : 'Check your first subtopic to begin recording activity.'}</p>
+        </div>
+      </div>
 
       {/* Embedded Skill Radar & Competency Matrix */}
       <div className="mt-4">
