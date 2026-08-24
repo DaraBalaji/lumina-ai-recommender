@@ -12,6 +12,8 @@ import {
 import { LearnerProfile, Roadmap, Milestone } from '../types';
 import { SkillRadarChart } from './SkillRadarChart';
 import { getStudyRecords } from '../services/dbService';
+import { calculateSkillGaps } from '../services/recommendationEngine';
+import { TARGET_ROLES } from '../data/skillTaxonomy';
 
 interface DashboardProps {
   profile: LearnerProfile;
@@ -46,6 +48,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   });
   const completedSubtopics = allMilestones.reduce((total, milestone) => total + milestone.subtopics.filter((subtopic) => subtopic.completed).length, 0);
   const totalSubtopics = allMilestones.reduce((total, milestone) => total + milestone.subtopics.length, 0);
+  const role = TARGET_ROLES.find((item) => item.id === profile.targetRoleId) || TARGET_ROLES[0];
+  const skillGaps = calculateSkillGaps(profile, role);
+  const strongestSkills = [...skillGaps].sort((a, b) => b.currentScore - a.currentScore).slice(0, 3);
+  const priorityGaps = [...skillGaps].sort((a, b) => b.gapScore - a.gapScore).slice(0, 3);
+  const quizActivities = studyRecords.filter((record) => record.activityType === 'quiz');
+  const correctQuizActivities = quizActivities.filter((record) => (record.masteryPoints || 0) > 0);
+  const evidenceScore = Math.min(100, (profile.assessmentCompletedAt ? 25 : 0) + Math.min(35, completedSubtopics * 5) + Math.min(40, quizActivities.length * 8));
 
   return (
     <div className="flex flex-col gap-10 pb-16">
@@ -212,6 +221,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
           <p className="text-xs text-on-surface-variant">{completedSubtopics ? `${completedSubtopics} subtopic${completedSubtopics === 1 ? '' : 's'} completed from your real activity.` : 'Check your first subtopic to begin recording activity.'}</p>
         </div>
+      </div>
+
+      <div className="glass-panel p-6 rounded-3xl border border-outline-variant/30">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">Learner analysis</span>
+            <h2 className="font-headline-md text-xl font-bold text-primary dark:text-on-primary-fixed mt-1">{profile.name}'s learning profile</h2>
+            <p className="text-xs text-on-surface-variant mt-1">A transparent view built from your goal, assessment, checklist activity, and quiz evidence.</p>
+          </div>
+          <div className="rounded-2xl bg-secondary-container/30 px-4 py-3 text-right">
+            <span className="block text-[10px] uppercase tracking-wider text-secondary">Evidence confidence</span>
+            <strong className="text-2xl text-primary dark:text-on-primary-fixed">{evidenceScore}%</strong>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div className="rounded-2xl border border-outline-variant/30 p-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">Target</span>
+            <p className="text-sm font-bold text-primary dark:text-on-primary-fixed mt-1">{role.title}</p>
+            <p className="text-xs text-on-surface-variant mt-1">{profile.hoursPerWeek} hrs/week · {profile.preferredFormat}</p>
+          </div>
+          <div className="rounded-2xl border border-outline-variant/30 p-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">Evidence collected</span>
+            <p className="text-sm font-bold text-primary dark:text-on-primary-fixed mt-1">{completedSubtopics} topics · {quizActivities.length} quizzes</p>
+            <p className="text-xs text-on-surface-variant mt-1">{correctQuizActivities.length} correct quiz responses</p>
+          </div>
+          <div className="rounded-2xl border border-outline-variant/30 p-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">Interests</span>
+            <p className="text-sm font-bold text-primary dark:text-on-primary-fixed mt-1">{profile.interests.length ? profile.interests.slice(0, 2).join(' · ') : 'Not specified'}</p>
+            <p className="text-xs text-on-surface-variant mt-1">Used to personalize course ranking</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <h3 className="text-xs font-bold text-primary dark:text-on-primary-fixed mb-2">Current strengths</h3>
+            <div className="flex flex-col gap-2">{strongestSkills.map((skill) => <div key={skill.skillName} className="flex items-center justify-between rounded-xl bg-emerald-500/10 px-3 py-2 text-xs"><span>{skill.skillName}</span><strong>{skill.currentScore}%</strong></div>)}</div>
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-primary dark:text-on-primary-fixed mb-2">Recommended focus</h3>
+            <div className="flex flex-col gap-2">{priorityGaps.map((skill) => <div key={skill.skillName} className="flex items-center justify-between rounded-xl bg-amber-500/10 px-3 py-2 text-xs"><span>{skill.skillName}</span><strong>{skill.gapScore} point gap</strong></div>)}</div>
+          </div>
+        </div>
+        <p className="mt-5 border-t border-outline-variant/20 pt-4 text-[11px] text-on-surface-variant">Score method: assessment evidence contributes up to 25 points, completed topics up to 35 points, and quiz evidence up to 40 points. Mastery scores use assessment and recorded activity, never random values.</p>
       </div>
 
       {/* Embedded Skill Radar & Competency Matrix */}
