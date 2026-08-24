@@ -118,7 +118,7 @@ Return JSON with format:
     suggestedHoursPerWeek: hours,
     suggestedTimelineMonths: timeline,
     preferredFormat: format,
-    aiReasoning: `Lumina Local AI analyzed "${goalText}" and identified high alignment with the ${matched.title} benchmark trajectory.`,
+    aiReasoning: `RouteMind Local AI analyzed "${goalText}" and identified high alignment with the ${matched.title} benchmark trajectory.`,
   };
 };
 
@@ -264,7 +264,7 @@ Respond concisely in clean markdown with helpful analogies, actionable guidance,
   return {
     id: `msg-${Date.now()}`,
     sender: 'assistant',
-    text: `### Lumina Mentor Insight\n\nGreat question regarding **${userMessageText}**!\n\n1. **Core Concept**: Focus on building a strong mental model before jumping into code.\n2. **Practical Tip**: Test your understanding by implementing a 20-line standalone script or notebook.\n3. **Recommended Next Step**: Complete **${activeMilestone ? activeMilestone.title : 'the active milestone'}** to solidify this capability!`,
+    text: `### RouteMind Mentor Insight\n\nGreat question regarding **${userMessageText}**!\n\n1. **Core Concept**: Focus on building a strong mental model before jumping into code.\n2. **Practical Tip**: Test your understanding by implementing a 20-line standalone script or notebook.\n3. **Recommended Next Step**: Complete **${activeMilestone ? activeMilestone.title : 'the active milestone'}** to solidify this capability!`,
     timestamp: new Date().toISOString(),
     suggestions: [
       'Explain like I am 5',

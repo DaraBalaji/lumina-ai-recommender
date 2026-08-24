@@ -28,17 +28,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
   const handleDownloadMarkdown = () => {
     const md = exportRoadmapToMarkdown(roadmap, profile);
-    downloadFile(md, `Lumina-Roadmap-${roadmap.targetRoleId}.md`, 'text/markdown');
+    downloadFile(md, `RouteMind-Roadmap-${roadmap.targetRoleId}.md`, 'text/markdown');
   };
 
   const handleDownloadJSON = () => {
     const json = exportRoadmapToJSON(roadmap, profile);
-    downloadFile(json, `Lumina-Roadmap-${roadmap.targetRoleId}.json`, 'application/json');
+    downloadFile(json, `RouteMind-Roadmap-${roadmap.targetRoleId}.json`, 'application/json');
   };
 
   const handleDownloadICalendar = () => {
     const ics = exportRoadmapToICalendar(roadmap, profile);
-    downloadFile(ics, `Lumina-Schedule-${roadmap.targetRoleId}.ics`, 'text/calendar');
+    downloadFile(ics, `RouteMind-Schedule-${roadmap.targetRoleId}.ics`, 'text/calendar');
   };
 
   return (

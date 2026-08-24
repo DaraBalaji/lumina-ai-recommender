@@ -43,10 +43,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <span className="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary-fixed tracking-tight">
-              Lumina
+              RouteMind
             </span>
             <span className="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-medium">
-              AI Pathing
+              Adaptive Paths
             </span>
           </div>
         </div>

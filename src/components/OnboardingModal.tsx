@@ -135,7 +135,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
             <div>
               <h2 className="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary-fixed">
-                Lumina Diagnostic Assessment
+                RouteMind Diagnostic Assessment
               </h2>
               <p className="text-xs text-on-surface-variant dark:text-outline-variant">
                 Configure your personalized learning path & skill gap matrix

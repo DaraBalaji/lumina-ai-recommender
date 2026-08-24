@@ -36,7 +36,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) =
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-headline-lg text-2xl font-bold text-primary dark:text-on-primary-fixed">Welcome to Lumina</h1>
+            <h1 className="font-headline-lg text-2xl font-bold text-primary dark:text-on-primary-fixed">Welcome to RouteMind</h1>
             <p className="text-xs text-on-surface-variant">{mode === 'signin' ? 'Sign in to your learning workspace' : 'Create your private learning workspace'}</p>
           </div>
         </div>

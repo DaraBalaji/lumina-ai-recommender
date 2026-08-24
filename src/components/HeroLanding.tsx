@@ -47,7 +47,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
             </h1>
 
             <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-outline-variant max-w-2xl mx-auto md:mx-0">
-              Lumina is your dedicated AI mentor, crafting highly personalized learning roadmaps, tracking skill mastery in real-time, and accelerating your professional growth with explainable recommendations.
+              RouteMind is your adaptive learning intelligence, crafting personalized roadmaps, tracking skill mastery in real-time, and accelerating your professional growth with explainable recommendations.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 justify-center md:justify-start">
@@ -72,7 +72,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
             <div className="relative w-full aspect-square max-w-md mx-auto">
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxD_5n0JBS-N-BNScPPQNL6MSd3qAPTpnT3uO5XksFPd-undVVpsoa_hFm13VVf17D8Po-yWYgArmhKKwc6ZuQQtzbAZHX1hETpGOBWFUQBDxoPNm0rjx9fw5rJoOxHMYQOpVod7ewvgT9OjFeye0oZdEjbYMzNFIGL6jDZvHIJtUXm3IJN0PcisKTNoc12GwvNrAJwP9WEIn5CP5k82kXOhHLT7CNG4XO6V8ILbjGsbwiVR3BJOqPRA"
-                alt="Lumina Hero Abstract"
+                alt="RouteMind adaptive learning workspace"
                 className="absolute inset-0 w-full h-full object-cover rounded-3xl shadow-2xl glass-panel ai-glow border border-white/60"
               />
 
@@ -107,7 +107,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
         <div className="max-w-container-max mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary dark:text-on-primary-fixed mb-4">
-              How Lumina Works
+              How RouteMind Works
             </h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-outline-variant max-w-2xl mx-auto">
               A systematic, distraction-free approach to continuous learning and rapid competency building.
@@ -125,7 +125,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 1. Assess
               </h3>
               <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant">
-                Lumina evaluates your current skill baseline through an adaptive diagnostic intake wizard to pinpoint your exact starting point and missing prerequisites.
+                RouteMind evaluates your current skill baseline through an adaptive diagnostic intake wizard to pinpoint your exact starting point and missing prerequisites.
               </p>
             </div>
 
@@ -153,7 +153,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 3. Master
               </h3>
               <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant">
-                Engage with hands-on capstone projects while Lumina Mentor tracks progress in real-time, providing practice quizzes and adaptive course corrections.
+                Engage with hands-on capstone projects while RouteMind Mentor tracks progress in real-time, providing practice quizzes and adaptive course corrections.
               </p>
             </div>
           </div>
@@ -229,7 +229,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                   Skill Mastery Tracking
                 </h3>
                 <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant mb-6">
-                  Move beyond completion metrics. Lumina measures deep comprehension through active recall, code quizzes, and practical project deliverables.
+                  Move beyond completion metrics. RouteMind measures deep comprehension through active recall, code quizzes, and practical project deliverables.
                 </p>
               </div>
 
@@ -285,7 +285,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
             Ready to Accelerate Your Mastery?
           </h2>
           <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-outline-variant mb-10 max-w-2xl mx-auto">
-            Join thousands of ambitious engineers and analysts who have transformed their learning trajectory with Lumina.
+            Build a learning trajectory that adapts to your evidence, pace, and goals with RouteMind.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button

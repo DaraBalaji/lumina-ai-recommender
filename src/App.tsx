@@ -412,7 +412,7 @@ export const App: React.FC = () => {
             <div className="w-7 h-7 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold">
               <Sparkles className="w-4 h-4 text-secondary" />
             </div>
-            <span className="font-label-md text-xs font-bold">Lumina Mentor</span>
+            <span className="font-label-md text-xs font-bold">RouteMind Mentor</span>
           </button>
         )}
       </div>

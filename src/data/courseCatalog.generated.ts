@@ -40,7 +40,7 @@ export const GENERATED_COURSES: Course[] = [
   {
     "id": "gen-infra-003",
     "title": "Infrastructure Essentials 3",
-    "provider": "Lumina Labs",
+    "provider": "RouteMind Labs",
     "description": "Infrastructure Essentials 3 — concise, practical training on infrastructure topics and hands-on labs.",
     "durationHours": 23,
     "difficulty": "Beginner",

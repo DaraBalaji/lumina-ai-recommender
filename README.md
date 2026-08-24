@@ -1,6 +1,6 @@
-# Lumina
+# RouteMind
 
-Lumina is a Vite + React learning-path application with Gemini chat and a local MongoDB authentication API.
+RouteMind is a Vite + React adaptive learning-path application with Gemini chat and a local MongoDB authentication API.
 
 ## Local MongoDB connection
 

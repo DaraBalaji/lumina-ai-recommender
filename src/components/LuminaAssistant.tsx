@@ -31,7 +31,7 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
   const createWelcomeMessage = (): ChatMessage => ({
     id: `msg-welcome-${Date.now()}`,
     sender: 'assistant',
-    text: `Hello ${profile.name}! 👋 I am your **Lumina Mentor Copilot**.\n\nI am tracking your learning trajectory towards **${profile.targetRoleTitle}**.\n\nHow can I accelerate your learning today?`,
+    text: `Hello ${profile.name}! 👋 I am your **RouteMind Mentor Copilot**.\n\nI am tracking your learning trajectory towards **${profile.targetRoleTitle}**.\n\nHow can I accelerate your learning today?`,
     timestamp: new Date().toISOString(),
     suggestions: [
       'Explain Transformers like I am 5',
@@ -154,7 +154,7 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
           </div>
           <div>
             <span className="font-headline-md text-sm font-bold text-white block">
-              Lumina Mentor Copilot
+              RouteMind Mentor Copilot
             </span>
             <span className="text-[10px] text-secondary-container flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live AI Tutor & Roadmap Adaptor
@@ -293,7 +293,7 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Ask Lumina Mentor a question..."
+          placeholder="Ask RouteMind Mentor a question..."
           className="flex-1 rounded-full border border-outline-variant/40 px-4 py-2 text-xs bg-surface-container-low dark:bg-surface-container/20 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
         />
         <button
