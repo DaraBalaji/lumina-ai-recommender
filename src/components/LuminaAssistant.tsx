@@ -5,6 +5,7 @@ import {
   Sparkles,
   Bot,
   Zap,
+  Trash2,
 } from 'lucide-react';
 import { LearnerProfile, Milestone, ChatMessage, PracticeQuiz } from '../types';
 import { sendLuminaChatMessage, generateMilestoneXAIExplanation } from '../services/aiService';
@@ -25,23 +26,23 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
   activeMilestone,
   onApplyRoadmapAdaptation,
 }) => {
+  const createWelcomeMessage = (): ChatMessage => ({
+    id: `msg-welcome-${Date.now()}`,
+    sender: 'assistant',
+    text: `Hello ${profile.name}! 👋 I am your **Lumina Mentor Copilot**.\n\nI am tracking your learning trajectory towards **${profile.targetRoleTitle}**.\n\nHow can I accelerate your learning today?`,
+    timestamp: new Date().toISOString(),
+    suggestions: [
+      'Explain Transformers like I am 5',
+      'Generate a practice code quiz',
+      'Adapt roadmap: Too Hard',
+      'What is my next best action?',
+    ],
+  });
+
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const history = getChatHistory();
     if (history.length > 0) return history;
-    return [
-      {
-        id: 'msg-welcome',
-        sender: 'assistant',
-        text: `Hello ${profile.name}! 👋 I am your **Lumina Mentor Copilot**.\n\nI am tracking your learning trajectory towards **${profile.targetRoleTitle}**.\n\nHow can I accelerate your learning today?`,
-        timestamp: new Date().toISOString(),
-        suggestions: [
-          'Explain Transformers like I am 5',
-          'Generate a practice code quiz',
-          'Adapt roadmap: Too Hard',
-          'What is my next best action?',
-        ],
-      },
-    ];
+    return [createWelcomeMessage()];
   });
 
   const [inputQuery, setInputQuery] = useState('');
@@ -130,6 +131,10 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
     );
   };
 
+  const handleClearChat = () => {
+    setMessages([createWelcomeMessage()]);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -150,12 +155,24 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleClearChat}
+            className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            title="Clear chat history"
+            aria-label="Clear chat history"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            title="Close mentor"
+            aria-label="Close mentor"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages List Area */}
