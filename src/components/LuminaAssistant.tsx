@@ -17,6 +17,7 @@ interface LuminaAssistantProps {
   profile: LearnerProfile;
   activeMilestone?: Milestone | null;
   onApplyRoadmapAdaptation?: (action: 'compress' | 'inject_prereq' | 'reorder') => void;
+  onQuizCompleted?: (correct: boolean, topic: string) => void;
 }
 
 export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
@@ -25,6 +26,7 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
   profile,
   activeMilestone,
   onApplyRoadmapAdaptation,
+  onQuizCompleted,
 }) => {
   const createWelcomeMessage = (): ChatMessage => ({
     id: `msg-welcome-${Date.now()}`,
@@ -115,6 +117,11 @@ export const LuminaAssistant: React.FC<LuminaAssistantProps> = ({
   };
 
   const handleQuizAnswer = (messageId: string, selectedIdx: number) => {
+    const answeredMessage = messages.find((message) => message.id === messageId);
+    const quiz = answeredMessage?.quiz;
+    if (quiz && onQuizCompleted) {
+      onQuizCompleted(selectedIdx === quiz.correctAnswerIndex, quiz.topic);
+    }
     setMessages((prev) =>
       prev.map((msg) => {
         if (msg.id === messageId && msg.quiz) {

@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { calculateLearningMetrics } from './learningMetrics';
 import { StudyRecord } from '../types';
 
-const record = (date: string, hours: number, skills: string[]): StudyRecord => ({
+const record = (date: string, hours: number, skills: string[], masteryPoints?: number): StudyRecord => ({
   id: date,
   milestoneId: `milestone-${date}`,
   courseId: `course-${date}`,
   completedAt: `${date}T12:00:00.000Z`,
   hours,
   skills,
+  masteryPoints,
 });
 
 describe('calculateLearningMetrics', () => {
@@ -35,5 +36,15 @@ describe('calculateLearningMetrics', () => {
   it('caps skill mastery at one hundred', () => {
     const records = Array.from({ length: 12 }, (_, index) => record(`2026-08-${String(index + 1).padStart(2, '0')}`, 1, ['Python']));
     expect(calculateLearningMetrics(records, ['Python']).baselineScores.Python).toBe(100);
+  });
+
+  it('uses quiz mastery points while retaining quiz activity time', () => {
+    const metrics = calculateLearningMetrics(
+      [record('2026-08-21', 0.25, ['Python'], 5), record('2026-08-21', 0.25, ['Python'], 0)],
+      ['Python'],
+      new Date('2026-08-21T12:00:00.000Z'),
+    );
+    expect(metrics.totalHoursLearned).toBe(0.5);
+    expect(metrics.baselineScores.Python).toBe(5);
   });
 });

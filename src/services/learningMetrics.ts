@@ -26,7 +26,7 @@ export const calculateLearningMetrics = (
   }
   const baselineScores = Object.fromEntries(knownSkills.map((skill) => [skill, 0]));
   records.forEach((record) => record.skills.forEach((skill) => {
-    baselineScores[skill] = Math.min(100, (baselineScores[skill] || 0) + 10);
+    baselineScores[skill] = Math.min(100, (baselineScores[skill] || 0) + (record.masteryPoints ?? 10));
   }));
   return { totalHoursLearned, weeklyVelocityHours, studyStreakDays, baselineScores };
 };

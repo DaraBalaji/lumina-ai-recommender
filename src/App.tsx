@@ -279,6 +279,24 @@ export const App: React.FC = () => {
     setRoadmap(updatedRoadmap);
   };
 
+  const handleQuizCompleted = (correct: boolean, topic: string) => {
+    const skill = selectedMilestone?.skillsGained[0] || topic;
+    const record: StudyRecord = {
+      id: `quiz-${Date.now()}`,
+      milestoneId: selectedMilestone?.id || 'general-quiz',
+      courseId: selectedMilestone?.course.id || 'general-quiz',
+      completedAt: new Date().toISOString(),
+      hours: 0.25,
+      skills: [skill],
+      activityType: 'quiz',
+      masteryPoints: correct ? 5 : 0,
+    };
+    const studyRecords = [...getStudyRecords(), record];
+    saveStudyRecords(studyRecords);
+    const metrics = calculateLearningMetrics(studyRecords, Object.keys(profile.baselineScores || {}));
+    updateActiveProfile({ ...metrics });
+  };
+
   // Add Custom Course
   const handleAddCustomCourse = (course: Course) => {
     addCustomCourseToCatalog(course);
@@ -407,6 +425,7 @@ export const App: React.FC = () => {
         profile={profile}
         activeMilestone={selectedMilestone}
         onApplyRoadmapAdaptation={handleApplyRoadmapAdaptation}
+        onQuizCompleted={handleQuizCompleted}
       />
 
       {/* Mobile Bottom Navigation Bar (Design-faithful) */}

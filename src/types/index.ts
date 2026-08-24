@@ -156,6 +156,8 @@ export interface StudyRecord {
   hours: number;
   skills: string[];
   subtopicId?: string;
+  activityType?: 'subtopic' | 'quiz';
+  masteryPoints?: number;
 }
 
 export interface LocalDBSchema {
