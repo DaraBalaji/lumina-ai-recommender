@@ -168,7 +168,8 @@ export const RoadmapVisualizer: React.FC<RoadmapVisualizerProps> = ({
           </div>
 
           {/* Phase Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+          <div className="overflow-x-auto pb-3">
+          <div className="grid min-w-[980px] grid-cols-4 gap-6 relative">
             {roadmap.phases.map((phase, pIdx) => (
               <div key={phase.id} className="flex flex-col gap-4 relative">
                 {/* Phase Column Header */}
@@ -219,9 +220,26 @@ export const RoadmapVisualizer: React.FC<RoadmapVisualizerProps> = ({
                         {m.title}
                       </h4>
 
+                      <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-surface-variant/60">
+                        <div
+                          className={`h-full rounded-full ${m.status === 'Completed' ? 'bg-emerald-500' : 'bg-secondary'}`}
+                          style={{ width: `${m.subtopics.length ? (m.subtopics.filter((topic) => topic.completed).length / m.subtopics.length) * 100 : 0}%` }}
+                        />
+                      </div>
+
                       <div className="flex items-center justify-between text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant/20">
                         <span>~{m.course.durationHours} hrs</span>
-                        <span className="font-bold text-secondary">⭐ {m.course.rating}</span>
+                        <span className="font-bold text-secondary">{m.subtopics.filter((topic) => topic.completed).length}/{m.subtopics.length} topics</span>
+                      </div>
+
+                      <div className="mt-2 flex flex-col gap-1 border-t border-outline-variant/20 pt-2">
+                        {m.subtopics.slice(0, 2).map((topic) => (
+                          <label key={topic.id} onClick={(event) => event.stopPropagation()} className="flex cursor-pointer items-center gap-1.5 text-[10px] text-on-surface-variant">
+                            <input type="checkbox" checked={topic.completed} onChange={() => onToggleSubtopic(m.id, topic.id)} className="h-3 w-3 accent-secondary" />
+                            <span className={topic.completed ? 'line-through opacity-60' : 'truncate'}>{topic.skill}</span>
+                          </label>
+                        ))}
+                        {m.subtopics.length > 2 && <span className="text-[10px] text-secondary">Open node for {m.subtopics.length - 2} more topics</span>}
                       </div>
                     </div>
                   ))}
@@ -235,6 +253,7 @@ export const RoadmapVisualizer: React.FC<RoadmapVisualizerProps> = ({
                 )}
               </div>
             ))}
+          </div>
           </div>
         </div>
       )}
