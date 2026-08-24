@@ -1,16 +1,19 @@
 import { defineConfig, loadEnv } from 'vite';
+import type { ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { MongoClient } from 'mongodb';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { URLSearchParams } from 'node:url';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   const luminaAiPlugin = {
     name: 'lumina-ai-chat-proxy',
-    configureServer(server) {
+    configureServer(server: ViteDevServer) {
       const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
       const mongoDbName = env.MONGODB_DB_NAME || 'lumina';
       const mongoClient = new MongoClient(mongoUri);
@@ -19,7 +22,7 @@ export default defineConfig(({ mode }) => {
         if (!mongoConnection) mongoConnection = mongoClient.connect();
         return mongoConnection;
       };
-      const readBody = async (req) => {
+      const readBody = async (req: IncomingMessage) => {
         let body = '';
         for await (const chunk of req) body += chunk;
         return body ? JSON.parse(body) : {};
@@ -33,7 +36,7 @@ export default defineConfig(({ mode }) => {
         return timingSafeEqual(actual, Buffer.from(hash, 'hex'));
       };
 
-      server.middlewares.use('/api/db/status', async (req, res, next) => {
+      server.middlewares.use('/api/db/status', async (req: IncomingMessage, res: ServerResponse, next: (error?: unknown) => void) => {
         if (req.method !== 'GET') return next();
         try {
           const client = await connectMongo();
@@ -50,7 +53,58 @@ export default defineConfig(({ mode }) => {
         }
       });
 
-      server.middlewares.use('/api/auth', async (req, res, next) => {
+      server.middlewares.use('/api/auth', async (req: IncomingMessage, res: ServerResponse, next: (error?: unknown) => void) => {
+        if (req.method === 'GET' && req.url === '/google/config') {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ enabled: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) }));
+          return;
+        }
+        if (req.method === 'GET' && req.url === '/google') {
+          const clientId = env.GOOGLE_CLIENT_ID;
+          const redirectUri = env.GOOGLE_REDIRECT_URI || `http://localhost:${server.config.server.port}/api/auth/google/callback`;
+          if (!clientId || !env.GOOGLE_CLIENT_SECRET) {
+            res.statusCode = 503;
+            res.end('Google sign-in is not configured on this server.');
+            return;
+          }
+          const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri, response_type: 'code', scope: 'openid email profile', access_type: 'online', prompt: 'select_account' });
+          res.statusCode = 302;
+          res.setHeader('Location', `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+          res.end();
+          return;
+        }
+        if (req.method === 'GET' && req.url === '/google/callback') {
+          try {
+            const callbackUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+            const code = callbackUrl.searchParams.get('code');
+            if (!code || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) throw new Error('Invalid Google OAuth configuration.');
+            const redirectUri = env.GOOGLE_REDIRECT_URI || `http://localhost:${server.config.server.port}/api/auth/google/callback`;
+            const tokenResponse = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: redirectUri, grant_type: 'authorization_code' }) });
+            if (!tokenResponse.ok) throw new Error('Google token exchange failed.');
+            const tokens = await tokenResponse.json() as { access_token?: string };
+            const userResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${tokens.access_token}` } });
+            if (!userResponse.ok) throw new Error('Google profile request failed.');
+            const googleUser = await userResponse.json() as { sub: string; name?: string; email: string };
+            const client = await connectMongo();
+            const users = client.db(mongoDbName).collection('users');
+            const existing = await users.findOne({ googleId: googleUser.sub });
+            const user = existing || (await users.findOne({ email: googleUser.email }));
+            let userId: string;
+            if (user?._id) {
+              userId = user._id.toString();
+              await users.updateOne({ _id: user._id }, { $set: { googleId: googleUser.sub, name: googleUser.name || googleUser.email, email: googleUser.email, provider: 'google', updatedAt: new Date() } });
+            } else {
+              userId = (await users.insertOne({ googleId: googleUser.sub, name: googleUser.name || googleUser.email, email: googleUser.email, provider: 'google', createdAt: new Date() })).insertedId.toString();
+            }
+            res.statusCode = 302;
+            res.setHeader('Location', `/?auth=google&userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(googleUser.name || googleUser.email)}&email=${encodeURIComponent(googleUser.email)}`);
+            res.end();
+          } catch (error) {
+            res.statusCode = 503;
+            res.end('Google sign-in failed. Check the OAuth configuration and try again.');
+          }
+          return;
+        }
         if (req.method !== 'POST' || !['/signin', '/signup'].includes(req.url || '')) return next();
         try {
           const payload = await readBody(req);
@@ -91,7 +145,7 @@ export default defineConfig(({ mode }) => {
         }
       });
 
-      server.middlewares.use('/api/workspace', async (req, res, next) => {
+      server.middlewares.use('/api/workspace', async (req: IncomingMessage, res: ServerResponse, next: (error?: unknown) => void) => {
         if (!['GET', 'PUT'].includes(req.method || '')) return next();
         try {
           const requestUrl = new URL(req.url || '/', 'http://localhost');
@@ -120,7 +174,7 @@ export default defineConfig(({ mode }) => {
         }
       });
 
-      server.middlewares.use('/api/ai/chat', async (req, res, next) => {
+      server.middlewares.use('/api/ai/chat', async (req: IncomingMessage, res: ServerResponse, next: (error?: unknown) => void) => {
         if (req.method !== 'POST') return next();
 
         try {

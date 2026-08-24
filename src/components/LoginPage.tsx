@@ -4,9 +4,10 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 interface LoginPageProps {
   onLogin: (name: string, email: string, password: string, mode: 'signin' | 'signup') => Promise<void>;
   onBackToHome?: () => void;
+  googleEnabled?: boolean;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, googleEnabled = false }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +73,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) =
             {isSubmitting ? 'Connecting...' : mode === 'signin' ? 'Sign in' : 'Create workspace'} <ArrowRight className="w-4 h-4" />
           </button>
         </form>
+        <div className="relative my-5 flex items-center gap-3 text-[10px] text-on-surface-variant">
+          <span className="h-px flex-1 bg-outline-variant/30" />
+          <span>OR</span>
+          <span className="h-px flex-1 bg-outline-variant/30" />
+        </div>
+        <button
+          type="button"
+          disabled={!googleEnabled}
+          onClick={() => { if (googleEnabled) window.location.href = '/api/auth/google'; }}
+          className="flex w-full items-center justify-center gap-3 rounded-full border border-outline-variant/50 bg-surface-container-lowest px-6 py-3 text-sm font-semibold text-on-surface hover:border-secondary disabled:cursor-not-allowed disabled:opacity-60"
+          title={googleEnabled ? 'Continue with Google' : 'Google sign-in requires server OAuth configuration'}
+        >
+          <span className="text-base font-bold">G</span>
+          {googleEnabled ? 'Sign in with Google' : 'Google sign-in not configured'}
+        </button>
         <p className="mt-5 text-center text-[11px] text-on-surface-variant">Accounts are stored in your local MongoDB database.</p>
         {onBackToHome && <button type="button" onClick={onBackToHome} className="mt-3 w-full text-xs font-semibold text-secondary hover:underline">Back to home</button>}
       </section>

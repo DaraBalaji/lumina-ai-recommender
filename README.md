@@ -22,3 +22,7 @@ Lumina is a Vite + React learning-path application with Gemini chat and a local 
 5. Open the app and create an account. This creates the `lumina` database and `users` collection. After sign-in, profiles, roadmaps, study records, chat history, notes, and custom courses are synchronized to the `workspaces` collection. The database status can be checked at `/api/db/status` while the Vite server is running.
 
 The `.env` file is ignored by Git and must never be committed. For deployment, use a hosted MongoDB connection string such as MongoDB Atlas in the deployment provider's environment variables.
+
+## Google sign-in
+
+Create a Google OAuth 2.0 Web application in Google Cloud Console and add the callback URL from `GOOGLE_REDIRECT_URI` to its authorized redirect URIs. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the server environment. The Google button remains unavailable until both values are configured.
