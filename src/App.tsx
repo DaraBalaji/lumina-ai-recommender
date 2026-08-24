@@ -45,7 +45,6 @@ import { calculateLearningMetrics } from './services/learningMetrics';
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
   const [isAuthPageOpen, setIsAuthPageOpen] = useState(false);
-  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState<'landing' | 'roadmap' | 'dashboard' | 'catalog'>('landing');
   const [profile, setProfile] = useState<LearnerProfile>(getActiveProfile);
   const [roadmap, setRoadmap] = useState<Roadmap | null>(getActiveRoadmap);
@@ -68,29 +67,6 @@ export const App: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('auth') !== 'google') return;
-    const userId = params.get('userId');
-    const name = params.get('name');
-    const email = params.get('email');
-    if (userId && name && email) {
-      localStorage.setItem('lumina_authenticated', 'true');
-      localStorage.setItem('lumina_account_id', userId);
-      localStorage.setItem('lumina_account_email', email);
-      updateActiveProfile({ name });
-      setProfile(getActiveProfile());
-      setIsAuthenticated(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetch('/api/auth/google/config')
-      .then((response) => response.json())
-      .then((result: { enabled?: boolean }) => setGoogleEnabled(result.enabled === true))
-      .catch(() => setGoogleEnabled(false));
-  }, []);
 
   // Ensure theme class on HTML element
   useEffect(() => {
@@ -266,7 +242,7 @@ export const App: React.FC = () => {
       {/* Navbar Header */}
       {!isAuthenticated ? (
         isAuthPageOpen ? (
-          <LoginPage onLogin={handleLogin} googleEnabled={googleEnabled} onBackToHome={() => setIsAuthPageOpen(false)} />
+          <LoginPage onLogin={handleLogin} onBackToHome={() => setIsAuthPageOpen(false)} />
         ) : (
           <HeroLanding
             onStartOnboarding={() => setIsAuthPageOpen(true)}
