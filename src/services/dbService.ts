@@ -31,7 +31,7 @@ export const loadDB = (): LocalDBSchema => {
     parsed.studyRecords = parsed.studyRecords || {};
     parsed.profiles = (parsed.profiles || []).map((profile) => ({
       ...profile,
-      courseProgress: profile.courseProgress || {},
+      courseProgress: Object.fromEntries(Object.entries(profile.courseProgress || {}).map(([courseId, topics]) => [courseId, Array.isArray(topics) ? Object.fromEntries(topics.map((topic) => [topic, new Date().toISOString()])) : topics])),
     }));
     if (!parsed.profiles || parsed.profiles.length === 0) {
       parsed.profiles = [INITIAL_DEFAULT_PROFILE];
@@ -163,7 +163,8 @@ export const getActiveRoadmap = (): Roadmap | null => {
               id: `${milestone.course.id}-topic-${index + 1}`,
               title: `${skill}: learn, practice, and checkpoint`,
               skill,
-              completed: completedTopics[milestone.course.id]?.includes(`${milestone.course.id}-topic-${index + 1}`) || milestone.status === 'Completed',
+              completed: Boolean(completedTopics[milestone.course.id]?.[`${milestone.course.id}-topic-${index + 1}`]) || milestone.status === 'Completed',
+              completedAt: completedTopics[milestone.course.id]?.[`${milestone.course.id}-topic-${index + 1}`],
             })),
       })),
     })),

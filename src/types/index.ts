@@ -20,7 +20,7 @@ export interface LearnerProfile {
   targetTimelineMonths: number;
   baselineScores: Record<string, number>; // Skill -> Score 0-100
   completedCourseIds: string[];
-  courseProgress: Record<string, string[]>;
+  courseProgress: Record<string, Record<string, string>>;
   inProgressMilestoneIds: string[];
   studyStreakDays: number;
   weeklyVelocityHours: number;
@@ -89,6 +89,7 @@ export interface Subtopic {
   title: string;
   skill: string;
   completed: boolean;
+  completedAt?: string;
 }
 
 export interface RoadmapPhase {
@@ -152,6 +153,7 @@ export interface StudyRecord {
   completedAt: string;
   hours: number;
   skills: string[];
+  subtopicId?: string;
 }
 
 export interface LocalDBSchema {

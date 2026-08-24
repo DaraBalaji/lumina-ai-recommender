@@ -91,7 +91,7 @@ export const explainCourseScore = (
   course.skillsCovered.forEach((skill) => {
     const gap = skillGaps.find((g) => g.skillName === skill);
     if (gap) {
-      const completedTopics = profile.courseProgress?.[course.id]?.length || 0;
+      const completedTopics = Object.keys(profile.courseProgress?.[course.id] || {}).length;
       const momentumBonus = Math.min(20, (completedTopics / Math.max(1, course.skillsCovered.length)) * 20);
       gapRelevanceSum += gap.gapScore + (profile.interests?.includes(skill) ? 15 : 0) + momentumBonus;
       matchedGaps.push({ skill, gapScore: gap.gapScore });
@@ -246,7 +246,8 @@ export const generatePersonalizedRoadmap = (
         id: `${course.id}-topic-${index + 1}`,
         title: `${skill}: learn, practice, and checkpoint`,
         skill,
-        completed: isAlreadyCompleted || completedSubtopics.includes(`${course.id}-topic-${index + 1}`),
+        completed: isAlreadyCompleted || Boolean(completedSubtopics[`${course.id}-topic-${index + 1}`]),
+        completedAt: completedSubtopics[`${course.id}-topic-${index + 1}`],
       }));
 
       return {

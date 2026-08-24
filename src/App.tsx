@@ -216,7 +216,9 @@ export const App: React.FC = () => {
       milestones: phase.milestones.map((milestone) => {
         if (milestone.id !== milestoneId) return milestone;
         const subtopics = milestone.subtopics.map((subtopic) =>
-          subtopic.id === subtopicId ? { ...subtopic, completed: !subtopic.completed } : subtopic
+          subtopic.id === subtopicId
+            ? { ...subtopic, completed: !subtopic.completed, completedAt: !subtopic.completed ? new Date().toISOString() : undefined }
+            : subtopic
         );
         const allComplete = subtopics.length > 0 && subtopics.every((subtopic) => subtopic.completed);
         return {
@@ -245,27 +247,26 @@ export const App: React.FC = () => {
     if (!milestone) return;
 
     const existingRecords = getStudyRecords();
-    const wasCompleted = currentMilestone.status === 'Completed';
-    let studyRecords = existingRecords;
-    if (milestone.status === 'Completed' && !wasCompleted) {
-      studyRecords = [
-        ...existingRecords,
-        {
-          id: `study-${milestoneId}-${Date.now()}`,
-          milestoneId,
-          courseId: milestone.course.id,
-          completedAt: new Date().toISOString(),
-          hours: milestone.course.durationHours,
-          skills: milestone.skillsGained,
-        },
-      ];
-    } else if (milestone.status !== 'Completed' && wasCompleted) {
-      studyRecords = existingRecords.filter((record) => record.milestoneId !== milestoneId);
+    const changedSubtopic = milestone.subtopics.find((subtopic) => subtopic.id === subtopicId);
+    if (!changedSubtopic) return;
+    let studyRecords = existingRecords.filter((record) => record.subtopicId !== subtopicId);
+    if (changedSubtopic.completed && changedSubtopic.completedAt) {
+      studyRecords = [...studyRecords, {
+        id: `study-${subtopicId}`,
+        milestoneId,
+        courseId: milestone.course.id,
+        subtopicId,
+        completedAt: changedSubtopic.completedAt,
+        hours: milestone.course.durationHours / Math.max(1, milestone.subtopics.length),
+        skills: [changedSubtopic.skill],
+      }];
     }
     saveStudyRecords(studyRecords);
 
     const progress = { ...(profile.courseProgress || {}) };
-    progress[milestone.course.id] = milestone.subtopics.filter((subtopic) => subtopic.completed).map((subtopic) => subtopic.id);
+    progress[milestone.course.id] = Object.fromEntries(
+      milestone.subtopics.filter((subtopic) => subtopic.completed && subtopic.completedAt).map((subtopic) => [subtopic.id, subtopic.completedAt as string])
+    );
     const completedCourseIds = allMilestones
       .filter((item) => item.status === 'Completed')
       .map((item) => item.course.id);
