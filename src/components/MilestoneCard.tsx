@@ -139,8 +139,8 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
           <span className="mb-2 block text-[11px] font-bold text-primary dark:text-on-primary-fixed">Course checklist ({milestone.subtopics.filter((subtopic) => subtopic.completed).length}/{milestone.subtopics.length})</span>
           <div className="flex flex-col gap-1.5">
             {milestone.subtopics.map((subtopic) => (
-              <label key={subtopic.id} className="flex cursor-pointer items-center gap-2 text-[11px] text-on-surface-variant">
-                <input type="checkbox" checked={subtopic.completed} onChange={() => onToggleSubtopic(milestone.id, subtopic.id)} onClick={(event) => event.stopPropagation()} className="accent-secondary" />
+              <label key={subtopic.id} onClick={(event) => event.stopPropagation()} className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-1 text-[11px] text-on-surface-variant hover:bg-surface-variant/30">
+                <input type="checkbox" checked={subtopic.completed} onChange={() => onToggleSubtopic(milestone.id, subtopic.id)} className="h-4 w-4 cursor-pointer accent-secondary" />
                 <span className={subtopic.completed ? 'line-through opacity-60' : ''}>{subtopic.title}</span>
               </label>
             ))}

@@ -148,7 +148,26 @@ export const createNewProfile = (profile: LearnerProfile): LearnerProfile => {
 export const getActiveRoadmap = (): Roadmap | null => {
   const db = loadDB();
   const activeProfileId = db.activeProfileId || db.profiles[0]?.id;
-  return (activeProfileId && db.roadmaps[activeProfileId]) || null;
+  const roadmap = activeProfileId ? db.roadmaps[activeProfileId] : null;
+  if (!roadmap) return null;
+  const completedTopics = db.profiles.find((profile) => profile.id === activeProfileId)?.courseProgress || {};
+  return {
+    ...roadmap,
+    phases: roadmap.phases.map((phase) => ({
+      ...phase,
+      milestones: phase.milestones.map((milestone) => ({
+        ...milestone,
+        subtopics: milestone.subtopics?.length
+          ? milestone.subtopics
+          : milestone.course.skillsCovered.map((skill, index) => ({
+              id: `${milestone.course.id}-topic-${index + 1}`,
+              title: `${skill}: learn, practice, and checkpoint`,
+              skill,
+              completed: completedTopics[milestone.course.id]?.includes(`${milestone.course.id}-topic-${index + 1}`) || milestone.status === 'Completed',
+            })),
+      })),
+    })),
+  };
 };
 
 export const saveActiveRoadmap = (roadmap: Roadmap): void => {
