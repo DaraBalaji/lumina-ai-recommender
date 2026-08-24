@@ -15,6 +15,7 @@ import { MilestoneCard } from './MilestoneCard';
 interface RoadmapVisualizerProps {
   roadmap: Roadmap;
   onToggleMilestoneStatus: (milestoneId: string, newStatus: MilestoneStatus) => void;
+  onToggleSubtopic: (milestoneId: string, subtopicId: string) => void;
   onOpenAddCustomCourse: () => void;
   onSelectMilestoneDetails: (milestone: Milestone) => void;
 }
@@ -22,6 +23,7 @@ interface RoadmapVisualizerProps {
 export const RoadmapVisualizer: React.FC<RoadmapVisualizerProps> = ({
   roadmap,
   onToggleMilestoneStatus,
+  onToggleSubtopic,
   onOpenAddCustomCourse,
   onSelectMilestoneDetails,
 }) => {
@@ -245,6 +247,7 @@ export const RoadmapVisualizer: React.FC<RoadmapVisualizerProps> = ({
               key={milestone.id}
               milestone={milestone}
               onToggleStatus={onToggleMilestoneStatus}
+              onToggleSubtopic={onToggleSubtopic}
               onSelectForDetails={onSelectMilestoneDetails}
             />
           ))}

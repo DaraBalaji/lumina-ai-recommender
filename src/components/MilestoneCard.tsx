@@ -10,18 +10,19 @@ import {
   ChevronUp,
   Sparkles,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { Milestone, MilestoneStatus } from '../types';
 
 interface MilestoneCardProps {
   milestone: Milestone;
   onToggleStatus: (milestoneId: string, newStatus: MilestoneStatus) => void;
+  onToggleSubtopic: (milestoneId: string, subtopicId: string) => void;
   onSelectForDetails?: (milestone: Milestone) => void;
 }
 
 export const MilestoneCard: React.FC<MilestoneCardProps> = ({
   milestone,
   onToggleStatus,
+  onToggleSubtopic,
   onSelectForDetails,
 }) => {
   const [showXaiDrawer, setShowXaiDrawer] = useState(false);
@@ -33,14 +34,7 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
     if (milestone.status === 'Completed') {
       onToggleStatus(milestone.id, 'Available');
     } else {
-      // Trigger Confetti for completion!
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#006a61', '#86f2e4', '#070235', '#3b82f6'],
-      });
-      onToggleStatus(milestone.id, 'Completed');
+      onToggleStatus(milestone.id, 'In-Progress');
     }
   };
 
@@ -141,6 +135,18 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
           )}
         </div>
 
+        <div className="mb-4 rounded-xl border border-outline-variant/30 bg-surface-container-low/40 p-3">
+          <span className="mb-2 block text-[11px] font-bold text-primary dark:text-on-primary-fixed">Course checklist ({milestone.subtopics.filter((subtopic) => subtopic.completed).length}/{milestone.subtopics.length})</span>
+          <div className="flex flex-col gap-1.5">
+            {milestone.subtopics.map((subtopic) => (
+              <label key={subtopic.id} className="flex cursor-pointer items-center gap-2 text-[11px] text-on-surface-variant">
+                <input type="checkbox" checked={subtopic.completed} onChange={() => onToggleSubtopic(milestone.id, subtopic.id)} onClick={(event) => event.stopPropagation()} className="accent-secondary" />
+                <span className={subtopic.completed ? 'line-through opacity-60' : ''}>{subtopic.title}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Capstone Project Banner if exists */}
         {milestone.capstoneProject && (
           <div className="p-3.5 rounded-xl bg-tertiary-container/10 border border-tertiary-container/20 mb-4 text-xs text-tertiary dark:text-tertiary-fixed">
@@ -195,7 +201,7 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
             {milestone.status === 'Completed'
               ? 'Mark Incomplete'
               : milestone.status === 'In-Progress'
-              ? 'Mark Done'
+              ? 'Continue checklist'
               : 'Start Module'}
           </button>
         </div>

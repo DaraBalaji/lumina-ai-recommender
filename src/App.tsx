@@ -27,6 +27,7 @@ import {
   addCustomCourseToCatalog,
   getStudyRecords,
   saveStudyRecords,
+  saveChatHistory,
   loadRemoteWorkspace,
 } from './services/dbService';
 import { generatePersonalizedRoadmap } from './services/recommendationEngine';
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
   const [isAddCustomOpen, setIsAddCustomOpen] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [assistantSessionKey, setAssistantSessionKey] = useState(0);
 
   // Subscribe to real-time DB changes
   useEffect(() => {
@@ -120,6 +122,8 @@ export const App: React.FC = () => {
     localStorage.setItem('lumina_account_id', result.user.id);
     localStorage.setItem('lumina_account_email', result.user.email);
     await loadRemoteWorkspace(result.user.id);
+    saveChatHistory([]);
+    setAssistantSessionKey((currentKey) => currentKey + 1);
     updateActiveProfile({ name: result.user.name });
     setProfile(getActiveProfile());
     setRoadmap(getActiveRoadmap());
@@ -200,6 +204,80 @@ export const App: React.FC = () => {
     setRoadmap(updatedRoadmap);
   };
 
+  const handleToggleSubtopic = (milestoneId: string, subtopicId: string) => {
+    if (!roadmap) return;
+    const currentMilestone = roadmap.phases
+      .flatMap((phase) => phase.milestones)
+      .find((milestone) => milestone.id === milestoneId);
+    if (!currentMilestone || currentMilestone.status === 'Locked') return;
+
+    const updatedPhases = roadmap.phases.map((phase) => ({
+      ...phase,
+      milestones: phase.milestones.map((milestone) => {
+        if (milestone.id !== milestoneId) return milestone;
+        const subtopics = milestone.subtopics.map((subtopic) =>
+          subtopic.id === subtopicId ? { ...subtopic, completed: !subtopic.completed } : subtopic
+        );
+        const allComplete = subtopics.length > 0 && subtopics.every((subtopic) => subtopic.completed);
+        return {
+          ...milestone,
+          subtopics,
+          status: allComplete
+            ? ('Completed' as MilestoneStatus)
+            : subtopics.some((subtopic) => subtopic.completed)
+            ? ('In-Progress' as MilestoneStatus)
+            : ('Available' as MilestoneStatus),
+        };
+      }),
+    }));
+    const allMilestones = updatedPhases.flatMap((phase) => phase.milestones);
+    const updatedRoadmap: Roadmap = {
+      ...roadmap,
+      phases: updatedPhases,
+      updatedAt: new Date().toISOString(),
+      overallCompletionPercentage: Math.round(
+        (allMilestones.filter((milestone) => milestone.status === 'Completed').length /
+          Math.max(1, allMilestones.length)) *
+          100
+      ),
+    };
+    const milestone = allMilestones.find((item) => item.id === milestoneId);
+    if (!milestone) return;
+
+    const existingRecords = getStudyRecords();
+    const wasCompleted = currentMilestone.status === 'Completed';
+    let studyRecords = existingRecords;
+    if (milestone.status === 'Completed' && !wasCompleted) {
+      studyRecords = [
+        ...existingRecords,
+        {
+          id: `study-${milestoneId}-${Date.now()}`,
+          milestoneId,
+          courseId: milestone.course.id,
+          completedAt: new Date().toISOString(),
+          hours: milestone.course.durationHours,
+          skills: milestone.skillsGained,
+        },
+      ];
+    } else if (milestone.status !== 'Completed' && wasCompleted) {
+      studyRecords = existingRecords.filter((record) => record.milestoneId !== milestoneId);
+    }
+    saveStudyRecords(studyRecords);
+
+    const progress = { ...(profile.courseProgress || {}) };
+    progress[milestone.course.id] = milestone.subtopics.filter((subtopic) => subtopic.completed).map((subtopic) => subtopic.id);
+    const completedCourseIds = allMilestones
+      .filter((item) => item.status === 'Completed')
+      .map((item) => item.course.id);
+    const metrics = calculateLearningMetrics(
+      studyRecords,
+      Object.keys(profile.baselineScores || {})
+    );
+    updateActiveProfile({ courseProgress: progress, completedCourseIds, ...metrics });
+    saveActiveRoadmap(updatedRoadmap);
+    setRoadmap(updatedRoadmap);
+  };
+
   // Add Custom Course
   const handleAddCustomCourse = (course: Course) => {
     addCustomCourseToCatalog(course);
@@ -216,7 +294,7 @@ export const App: React.FC = () => {
     if (action === 'compress') {
       const firstPhase = roadmap.phases[0];
       if (firstPhase && firstPhase.milestones.length > 0) {
-        handleToggleMilestoneStatus(firstPhase.milestones[0].id, 'Completed');
+        handleToggleMilestoneStatus(firstPhase.milestones[0].id, 'In-Progress');
       }
       return;
     }
@@ -275,6 +353,7 @@ export const App: React.FC = () => {
             <RoadmapVisualizer
               roadmap={roadmap}
               onToggleMilestoneStatus={handleToggleMilestoneStatus}
+              onToggleSubtopic={handleToggleSubtopic}
               onOpenAddCustomCourse={() => setIsAddCustomOpen(true)}
               onSelectMilestoneDetails={(m) => setSelectedMilestone(m)}
             />
@@ -321,6 +400,7 @@ export const App: React.FC = () => {
 
       {/* Lumina Assistant Drawer */}
       <LuminaAssistant
+        key={assistantSessionKey}
         isOpen={isAssistantOpen}
         onClose={() => setIsAssistantOpen(false)}
         profile={profile}
@@ -487,15 +567,17 @@ export const App: React.FC = () => {
 
               <button
                 onClick={() => {
-                  handleToggleMilestoneStatus(
-                    selectedMilestone.id,
-                    selectedMilestone.status === 'Completed' ? 'Available' : 'Completed'
-                  );
-                  setSelectedMilestone(null);
+                  if (selectedMilestone.status === 'Completed') {
+                    handleToggleMilestoneStatus(selectedMilestone.id, 'Available');
+                    setSelectedMilestone(null);
+                  } else {
+                    handleToggleMilestoneStatus(selectedMilestone.id, 'In-Progress');
+                    setSelectedMilestone(null);
+                  }
                 }}
                 className="px-6 py-2.5 rounded-full bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container"
               >
-                {selectedMilestone.status === 'Completed' ? 'Mark Incomplete' : 'Complete Module'}
+                {selectedMilestone.status === 'Completed' ? 'Mark Incomplete' : 'Start Checklist'}
               </button>
             </div>
           </div>

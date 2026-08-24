@@ -91,7 +91,9 @@ export const explainCourseScore = (
   course.skillsCovered.forEach((skill) => {
     const gap = skillGaps.find((g) => g.skillName === skill);
     if (gap) {
-      gapRelevanceSum += gap.gapScore + (profile.interests?.includes(skill) ? 15 : 0);
+      const completedTopics = profile.courseProgress?.[course.id]?.length || 0;
+      const momentumBonus = Math.min(20, (completedTopics / Math.max(1, course.skillsCovered.length)) * 20);
+      gapRelevanceSum += gap.gapScore + (profile.interests?.includes(skill) ? 15 : 0) + momentumBonus;
       matchedGaps.push({ skill, gapScore: gap.gapScore });
     }
   });
@@ -239,6 +241,13 @@ export const generatePersonalizedRoadmap = (
         : 'Locked';
 
       const primarySkill = course.skillsCovered[0] || 'Core Domain Skills';
+      const completedSubtopics = profile.courseProgress?.[course.id] || [];
+      const subtopics = course.skillsCovered.map((skill, index) => ({
+        id: `${course.id}-topic-${index + 1}`,
+        title: `${skill}: learn, practice, and checkpoint`,
+        skill,
+        completed: isAlreadyCompleted || completedSubtopics.includes(`${course.id}-topic-${index + 1}`),
+      }));
 
       return {
         id: msId,
@@ -251,6 +260,7 @@ export const generatePersonalizedRoadmap = (
         prerequisiteMilestoneIds: [], // Set during DAG link pass
         estimatedWeeks: Math.max(1, Math.ceil(course.durationHours / Math.max(3, profile.hoursPerWeek))),
         skillsGained: course.skillsCovered,
+        subtopics,
         rationales: {
           skillGapAddressed: breakdown.matchedGaps.length
             ? `Targets gaps in ${breakdown.matchedGaps.map((m) => `${m.skill} (${m.gapScore})`).join(', ')}.`

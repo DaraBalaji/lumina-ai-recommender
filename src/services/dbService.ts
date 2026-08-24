@@ -29,6 +29,10 @@ export const loadDB = (): LocalDBSchema => {
     }
     const parsed = JSON.parse(raw) as LocalDBSchema;
     parsed.studyRecords = parsed.studyRecords || {};
+    parsed.profiles = (parsed.profiles || []).map((profile) => ({
+      ...profile,
+      courseProgress: profile.courseProgress || {},
+    }));
     if (!parsed.profiles || parsed.profiles.length === 0) {
       parsed.profiles = [INITIAL_DEFAULT_PROFILE];
       parsed.activeProfileId = INITIAL_DEFAULT_PROFILE.id;
@@ -40,6 +44,7 @@ export const loadDB = (): LocalDBSchema => {
         ...profile,
         baselineScores: Object.fromEntries(Object.keys(profile.baselineScores || {}).map((skill) => [skill, 0])),
         completedCourseIds: [],
+        courseProgress: {},
         inProgressMilestoneIds: [],
         studyStreakDays: 0,
         weeklyVelocityHours: 0,

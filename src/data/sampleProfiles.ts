@@ -25,6 +25,7 @@ export const INITIAL_DEFAULT_PROFILE: LearnerProfile = {
     'Cloud & Deployment (LangChain/LlamaIndex)': 0,
   },
   completedCourseIds: [],
+  courseProgress: {},
   inProgressMilestoneIds: [],
   studyStreakDays: 0,
   weeklyVelocityHours: 0,
