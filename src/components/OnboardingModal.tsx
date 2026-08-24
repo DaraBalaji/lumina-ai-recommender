@@ -77,7 +77,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         preferredFormat: parsed.preferredFormat,
         budget,
         targetTimelineMonths: parsed.suggestedTimelineMonths,
-      });
+      }, goalPrompt);
 
       onClose();
     } catch (e) {
@@ -101,7 +101,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       interests,
       baselineScores: buildAssessmentScores(),
       assessmentCompletedAt: new Date().toISOString(),
-    });
+    }, `Target role: ${matchedRole.title}. Interests: ${interests.join(', ')}`);
     onClose();
   };
 

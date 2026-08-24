@@ -234,6 +234,11 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
             <span className="font-semibold block text-primary dark:text-white">Career Impact:</span>
             <p className="text-on-surface-variant dark:text-outline-variant">{milestone.rationales.careerImpact}</p>
           </div>
+
+          <div>
+            <span className="font-semibold block text-primary dark:text-white">Why this was ranked:</span>
+            <p className="text-on-surface-variant dark:text-outline-variant">{milestone.rationales.recommendationEvidence}</p>
+          </div>
         </div>
       )}
     </div>

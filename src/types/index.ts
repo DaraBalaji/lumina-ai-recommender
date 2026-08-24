@@ -15,6 +15,7 @@ export interface LearnerProfile {
   hoursPerWeek: number;
   preferredFormat: LearningFormat;
   interests: string[];
+  goalText?: string;
   assessmentCompletedAt?: string;
   budget: ResourceCost | 'Any';
   targetTimelineMonths: number;
@@ -75,6 +76,7 @@ export interface Milestone {
     skillGapAddressed: string;
     prerequisiteCoverage: string;
     careerImpact: string;
+    recommendationEvidence: string;
     careerImpactScore: number; // 0-100
   };
   capstoneProject?: {

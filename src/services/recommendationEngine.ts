@@ -61,6 +61,7 @@ export const scoreCourseRelevance = (
 };
 
 export interface CourseScoreBreakdown {
+  semanticScore: number;
   skillGapScore: number;
   prereqScore: number;
   formatScore: number;
@@ -84,6 +85,12 @@ export const explainCourseScore = (
   const w2 = weights?.w2 ?? 0.25;
   const w3 = weights?.w3 ?? 0.15;
   const w4 = weights?.w4 ?? 0.15;
+
+  const tokenize = (value: string) => new Set(value.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2));
+  const learnerTokens = tokenize(`${profile.goalText || ''} ${(profile.interests || []).join(' ')}`);
+  const courseTokens = tokenize(`${course.title} ${course.description} ${course.skillsCovered.join(' ')}`);
+  const semanticMatches = [...courseTokens].filter((token) => learnerTokens.has(token)).length;
+  const semanticScore = Math.min(100, semanticMatches * 20);
 
   // Skill gap relevance
   let gapRelevanceSum = 0;
@@ -126,7 +133,7 @@ export const explainCourseScore = (
   const qualityScore = (course.rating / 5) * 100;
 
   const totalScore = Math.round(
-    w1 * skillGapScore + w2 * prereqScore + w3 * formatScore + w4 * qualityScore
+    0.25 * semanticScore + 0.35 * skillGapScore + 0.2 * prereqScore + 0.1 * formatScore + 0.1 * qualityScore
   );
 
   const explanationLines: string[] = [];
@@ -140,8 +147,10 @@ export const explainCourseScore = (
     explanationLines.push(`Estimated impact toward ${targetRole.title}: ~${Math.min(99, Math.max(50, Math.round(totalScore * 0.35)))}%`);
   }
   explanationLines.push(`Breakdown -> skillGap:${skillGapScore}, prereq:${prereqScore}, format:${formatScore}, quality:${qualityScore}`);
+  explanationLines.push(`Semantic goal match: ${semanticScore} (${semanticMatches} shared concepts)`);
 
   return {
+    semanticScore: Math.round(semanticScore),
     skillGapScore: Math.round(skillGapScore),
     prereqScore: Math.round(prereqScore),
     formatScore: Math.round(formatScore),
@@ -270,6 +279,7 @@ export const generatePersonalizedRoadmap = (
             ? `Learner is missing prerequisites: ${breakdown.missingPrereqs.join(', ')}.`
             : 'Prerequisites satisfied or low-risk for immediate start.',
           careerImpact: `Estimated career impact: ${breakdown.explanation}`,
+          recommendationEvidence: `Goal match ${breakdown.semanticScore}/100, skill-gap fit ${Math.round(breakdown.skillGapScore)}/100, prerequisite readiness ${Math.round(breakdown.prereqScore)}/100.`,
           careerImpactScore: Math.min(99, Math.max(0, breakdown.totalScore)),
         },
         capstoneProject: course.projectMapping

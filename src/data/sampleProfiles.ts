@@ -10,6 +10,7 @@ export const INITIAL_DEFAULT_PROFILE: LearnerProfile = {
   hoursPerWeek: 0,
   preferredFormat: 'Project-first',
   interests: [],
+  goalText: '',
   assessmentCompletedAt: undefined,
   budget: 'Any',
   targetTimelineMonths: 6,

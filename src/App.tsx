@@ -100,9 +100,9 @@ export const App: React.FC = () => {
   // Profile / Persona Update Handler
   const handleSaveProfile = (
     updatedProfile: Partial<LearnerProfile>,
-    _parsedGoal?: string
+    parsedGoal?: string
   ) => {
-    const newProfile = updateActiveProfile(updatedProfile);
+    const newProfile = updateActiveProfile({ ...updatedProfile, ...(parsedGoal ? { goalText: parsedGoal } : {}) });
     setProfile(newProfile);
     const newRoadmap = generatePersonalizedRoadmap(newProfile, updatedProfile.targetRoleId);
     saveActiveRoadmap(newRoadmap);
