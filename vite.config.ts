@@ -3,7 +3,7 @@ import type { ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -119,6 +119,117 @@ export default defineConfig(({ mode }) => {
         } catch (error) {
           res.statusCode = 503;
           res.end(JSON.stringify({ error: 'Could not save workspace to MongoDB.' }));
+        }
+      });
+
+      server.middlewares.use('/api/study-rooms', async (req: IncomingMessage, res: ServerResponse, next: (error?: unknown) => void) => {
+        if (!['GET', 'POST', 'PATCH'].includes(req.method || '')) return next();
+        try {
+          const requestUrl = new URL(req.url || '/', 'http://localhost');
+          const payload = ['POST', 'PATCH'].includes(req.method || '') ? await readBody(req) : {};
+          const userId = String(payload.userId || requestUrl.searchParams.get('userId') || '').trim();
+          if (!userId) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'A user id is required.' }));
+            return;
+          }
+          const client = await connectMongo();
+          const database = client.db(mongoDbName);
+          const rooms = database.collection('studyRooms');
+          const users = database.collection('users');
+
+          if (req.method === 'GET') {
+            const userRooms = await rooms.find({ $or: [{ 'members.userId': userId }, { 'requests.userId': userId }] }).toArray();
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ rooms: userRooms }));
+            return;
+          }
+
+          if (req.method === 'POST' && payload.action === 'create') {
+            const owner = await users.findOne({ _id: new ObjectId(userId) });
+            const room = {
+              id: randomBytes(12).toString('hex'),
+              name: String(payload.name || 'Study Room').trim().slice(0, 80),
+              ownerId: userId,
+              members: [{ userId, email: owner?.email || '', name: owner?.name || 'Room owner', status: 'accepted' }],
+              requests: [],
+              messages: [],
+              createdAt: new Date(),
+            };
+            await rooms.insertOne(room);
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ room }));
+            return;
+          }
+
+          const roomId = String(payload.roomId || '').trim();
+          const room = await rooms.findOne({ id: roomId });
+          if (!room) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Study room not found.' }));
+            return;
+          }
+
+          if (req.method === 'POST' && payload.action === 'invite') {
+            const email = String(payload.email || '').trim().toLowerCase();
+            const friend = await users.findOne({ email });
+            if (!friend) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: 'No registered account uses that email.' }));
+              return;
+            }
+            if (room.members.some((member) => member.userId === friend._id.toString()) || room.requests.some((request) => request.userId === friend._id.toString())) {
+              res.statusCode = 409;
+              res.end(JSON.stringify({ error: 'That learner is already a member or has a pending request.' }));
+              return;
+            }
+            await rooms.updateOne({ id: roomId }, { $push: { requests: { userId: friend._id.toString(), email, name: friend.name, invitedBy: userId, createdAt: new Date() } } });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ sent: true }));
+            return;
+          }
+
+          if (req.method === 'POST' && payload.action === 'message') {
+            const isMember = room.members.some((member) => member.userId === userId && member.status === 'accepted');
+            if (!isMember) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'Only accepted members can post messages.' }));
+              return;
+            }
+            const sender = await users.findOne({ _id: new ObjectId(userId) });
+            const message = { id: randomBytes(10).toString('hex'), userId, name: sender?.name || 'Learner', text: String(payload.text || '').trim().slice(0, 500), createdAt: new Date() };
+            if (!message.text) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Message cannot be empty.' }));
+              return;
+            }
+            await rooms.updateOne({ id: roomId }, { $push: { messages: message } });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ message }));
+            return;
+          }
+
+          if (req.method === 'PATCH' && payload.action === 'respond') {
+            const request = room.requests.find((item) => item.userId === userId);
+            if (!request || !['accepted', 'rejected'].includes(payload.status)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Invalid study room request.' }));
+              return;
+            }
+            const updates = payload.status === 'accepted'
+              ? { $pull: { requests: { userId } }, $push: { members: { userId, email: request.email, name: request.name, status: 'accepted' } } }
+              : { $pull: { requests: { userId } } };
+            await rooms.updateOne({ id: roomId }, updates);
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ updated: true }));
+            return;
+          }
+
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: 'Unsupported study room action.' }));
+        } catch (error) {
+          res.statusCode = 503;
+          res.end(JSON.stringify({ error: 'Study room service is unavailable. Start MongoDB locally and try again.' }));
         }
       });
 
