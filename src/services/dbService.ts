@@ -38,17 +38,15 @@ export const loadDB = (): LocalDBSchema => {
       parsed.activeProfileId = INITIAL_DEFAULT_PROFILE.id;
     }
     parsed.profiles = parsed.profiles.map((profile) => {
-      const records = parsed.studyRecords[profile.id] || [];
-      if (records.length > 0) return profile;
       return {
         ...profile,
-        baselineScores: Object.fromEntries(Object.keys(profile.baselineScores || {}).map((skill) => [skill, 0])),
-        completedCourseIds: [],
-        courseProgress: {},
-        inProgressMilestoneIds: [],
-        studyStreakDays: 0,
-        weeklyVelocityHours: 0,
-        totalHoursLearned: 0,
+        baselineScores: profile.baselineScores || {},
+        completedCourseIds: profile.completedCourseIds || [],
+        courseProgress: profile.courseProgress || {},
+        inProgressMilestoneIds: profile.inProgressMilestoneIds || [],
+        studyStreakDays: profile.studyStreakDays || 0,
+        weeklyVelocityHours: profile.weeklyVelocityHours || 0,
+        totalHoursLearned: profile.totalHoursLearned || 0,
       };
     });
     return parsed;

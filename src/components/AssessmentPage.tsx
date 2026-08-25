@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Award, CheckCircle2, ChevronRight, ClipboardCheck, RotateCcw, XCircle } from 'lucide-react';
 import { Roadmap } from '../types';
+import { getStudyRecords } from '../services/dbService';
 
 interface AssessmentPageProps {
   roadmap: Roadmap | null;
@@ -62,6 +63,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswe
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [mode, setMode] = useState<'exam' | 'revision'>('exam');
 
   const coveredTopics = useMemo(() => {
     const topics = roadmap?.phases
@@ -77,6 +79,14 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswe
 
   const currentQuestion = questions[questionIndex];
   const isFinished = questions.length > 0 && questionIndex >= questions.length;
+  const studyRecords = getStudyRecords();
+  const revisionTopics = coveredTopics.map((topic) => {
+    const attempts = studyRecords.filter((record) => record.activityType === 'quiz' && record.skills.includes(topic));
+    const incorrect = attempts.filter((record) => (record.masteryPoints || 0) === 0).length;
+    const latest = attempts.reduce((date, record) => Math.max(date, new Date(record.completedAt).getTime()), 0);
+    const daysSince = latest ? Math.floor((Date.now() - latest) / 86400000) : 99;
+    return { topic, incorrect, daysSince, priority: incorrect * 2 + Math.min(daysSince, 7) };
+  }).sort((first, second) => second.priority - first.priority);
 
   const resetAssessment = () => {
     setQuestionIndex(0);
@@ -115,7 +125,12 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswe
         </div>
       </section>
 
-      {coveredTopics.length === 0 ? (
+      <div className="flex gap-2">
+        <button onClick={() => setMode('exam')} className={`rounded-full px-4 py-2 text-xs font-semibold ${mode === 'exam' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant'}`}>Certification exam</button>
+        <button onClick={() => setMode('revision')} className={`rounded-full px-4 py-2 text-xs font-semibold ${mode === 'revision' ? 'bg-secondary text-on-secondary' : 'bg-surface-container-low text-on-surface-variant'}`}>Assessment revision</button>
+      </div>
+
+      {mode === 'exam' && (coveredTopics.length === 0 ? (
         <section className="glass-card rounded-2xl border border-outline-variant/40 p-8 text-center">
           <ClipboardCheck className="mx-auto h-8 w-8 text-secondary" />
           <h2 className="mt-3 text-lg font-bold text-primary dark:text-on-primary-fixed">Complete a topic to unlock your exam</h2>
@@ -143,6 +158,14 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswe
             })}
           </div>
           {selectedAnswer !== null && <button onClick={nextQuestion} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-on-primary hover:bg-primary-container">{questionIndex === questions.length - 1 ? 'See results' : 'Next question'} <ChevronRight className="h-4 w-4" /></button>}
+        </section>
+      ))}
+
+      {mode === 'revision' && (
+        <section className="glass-card rounded-2xl border border-outline-variant/40 p-6">
+          <h2 className="text-xl font-bold text-primary dark:text-on-primary-fixed">Revision from your assessment results</h2>
+          <p className="mt-2 text-sm text-on-surface-variant">Topics are prioritized from incorrect answers and time since your last assessment attempt.</p>
+          <div className="mt-5 grid gap-3">{revisionTopics.length ? revisionTopics.map((item) => <div key={item.topic} className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/30 p-4"><div><div className="text-sm font-semibold text-primary dark:text-on-primary-fixed">{item.topic}</div><div className="mt-1 text-xs text-on-surface-variant">{item.incorrect} incorrect attempt{item.incorrect === 1 ? '' : 's'} · {item.daysSince === 99 ? 'not assessed yet' : `${item.daysSince} day${item.daysSince === 1 ? '' : 's'} since last attempt`}</div></div><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${item.priority >= 5 ? 'bg-rose-500/10 text-rose-700' : 'bg-amber-500/10 text-amber-700'}`}>{item.priority >= 5 ? 'High priority' : 'Review soon'}</span></div>) : <p className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">Complete a roadmap topic to build your assessment revision queue.</p>}</div>
         </section>
       )}
 

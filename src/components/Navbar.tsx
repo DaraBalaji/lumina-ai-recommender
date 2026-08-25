@@ -3,24 +3,20 @@ import {
   Sparkles,
   BookOpen,
   Compass,
-  BarChart3,
   Sun,
   Moon,
-  Plus,
   LogOut,
-  ClipboardCheck,
-  FolderKanban,
   BriefcaseBusiness,
+  User,
 } from 'lucide-react';
 import { LearnerProfile } from '../types';
 
-export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment' | 'toolkit' | 'career';
+export type AppTab = 'roadmap' | 'catalog' | 'career' | 'profile';
 
 interface NavbarProps {
   activeTab: AppTab;
   setActiveTab: (tab: AppTab) => void;
   activeProfile: LearnerProfile;
-  onOpenOnboarding: () => void;
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -30,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   activeProfile,
-  onOpenOnboarding,
   onLogout,
   theme,
   onToggleTheme,
@@ -41,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand Logo */}
         <div
           className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => setActiveTab('landing')}
+          onClick={() => setActiveTab('roadmap')}
         >
           <div className="w-10 h-10 rounded-full bg-primary-container text-secondary-container flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200">
             <Sparkles className="w-5 h-5 text-secondary-container" />
@@ -59,17 +54,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Desktop Nav Tabs */}
         <nav className="hidden md:flex items-center gap-1 bg-surface-container-low/60 dark:bg-surface-container/20 p-1.5 rounded-full border border-outline-variant/30">
           <button
-            onClick={() => setActiveTab('landing')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-              activeTab === 'landing'
-                ? 'bg-primary text-on-primary shadow-sm font-semibold'
-                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
-            }`}
-          >
-            <Compass className="w-4 h-4" />
-            Home
-          </button>
-          <button
             onClick={() => setActiveTab('roadmap')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
               activeTab === 'roadmap'
@@ -81,17 +65,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             Learning Path
           </button>
           <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-              activeTab === 'dashboard'
-                ? 'bg-primary text-on-primary shadow-sm font-semibold'
-                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Mastery & Skills
-          </button>
-          <button
             onClick={() => setActiveTab('catalog')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
               activeTab === 'catalog'
@@ -101,28 +74,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Compass className="w-4 h-4" />
             150+ Catalog
-          </button>
-          <button
-            onClick={() => setActiveTab('assessment')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-              activeTab === 'assessment'
-                ? 'bg-primary text-on-primary shadow-sm font-semibold'
-                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
-            }`}
-          >
-            <ClipboardCheck className="w-4 h-4" />
-            Assessment
-          </button>
-          <button
-            onClick={() => setActiveTab('toolkit')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-              activeTab === 'toolkit'
-                ? 'bg-primary text-on-primary shadow-sm font-semibold'
-                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
-            }`}
-          >
-            <FolderKanban className="w-4 h-4" />
-            Toolkit
           </button>
           <button
             onClick={() => setActiveTab('career')}
@@ -139,13 +90,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action Bar */}
         <div className="flex items-center gap-3">
-          {/* New Diagnostic Path Button */}
           <button
-            onClick={onOpenOnboarding}
+            onClick={() => setActiveTab('profile')}
             className="hidden sm:flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary rounded-full font-label-md text-label-md hover:bg-secondary/90 transition-all shadow-sm"
           >
-            <Plus className="w-4 h-4" />
-            New Path
+            <User className="w-4 h-4" />
+            Profile
           </button>
 
           {/* Theme Toggle */}

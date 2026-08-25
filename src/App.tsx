@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
-  Compass,
   BookOpen,
-  BarChart3,
   User,
   X,
   ExternalLink,
-  ClipboardCheck,
-  FolderKanban,
   BriefcaseBusiness,
 } from 'lucide-react';
 import {
@@ -38,21 +34,21 @@ import { AppTab, Navbar } from './components/Navbar';
 import { HeroLanding } from './components/HeroLanding';
 import { OnboardingModal } from './components/OnboardingModal';
 import { RoadmapVisualizer } from './components/RoadmapVisualizer';
-import { Dashboard } from './components/Dashboard';
 import { LuminaAssistant } from './components/LuminaAssistant';
 import { CourseCatalogView } from './components/CourseCatalogView';
 import { ExportModal } from './components/ExportModal';
 import { AddCustomCourseModal } from './components/AddCustomCourseModal';
-import { LoginPage } from './components/LoginPage';
+import { LoginPage, SignupDetails } from './components/LoginPage';
 import { calculateLearningMetrics } from './services/learningMetrics';
-import { AssessmentPage } from './components/AssessmentPage';
-import { CareerToolkit } from './components/CareerToolkit';
 import { CareerHub } from './components/CareerHub';
+import { ProfilePage } from './components/ProfilePage';
+import { TARGET_ROLES } from './data/skillTaxonomy';
+import { parseNaturalLanguageGoal } from './services/aiService';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
   const [isAuthPageOpen, setIsAuthPageOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<AppTab>('landing');
+  const [activeTab, setActiveTab] = useState<AppTab>('roadmap');
   const [profile, setProfile] = useState<LearnerProfile>(getActiveProfile);
   const [roadmap, setRoadmap] = useState<Roadmap | null>(getActiveRoadmap);
   const [theme, setTheme] = useState<'light' | 'dark'>(getTheme);
@@ -116,7 +112,7 @@ export const App: React.FC = () => {
     setActiveTab('roadmap');
   };
 
-  const handleLogin = async (name: string, email: string, password: string, mode: 'signin' | 'signup') => {
+  const handleLogin = async (name: string, email: string, password: string, mode: 'signin' | 'signup', signupDetails?: SignupDetails) => {
     const response = await fetch(`/api/auth/${mode}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -130,11 +126,40 @@ export const App: React.FC = () => {
     await loadRemoteWorkspace(result.user.id);
     saveChatHistory([]);
     setAssistantSessionKey((currentKey) => currentKey + 1);
-    updateActiveProfile({ name: result.user.name });
-    setProfile(getActiveProfile());
-    setRoadmap(getActiveRoadmap());
+    const signupRole = signupDetails && TARGET_ROLES.find((role) => role.id === signupDetails.targetRoleId);
+    const initialProfile = updateActiveProfile({
+      name: result.user.name,
+      ...(signupDetails ? {
+        targetRoleId: signupDetails.targetRoleId,
+        targetRoleTitle: signupRole?.title || signupDetails.targetRoleId,
+        currentSkillLevel: signupDetails.currentSkillLevel,
+        hoursPerWeek: signupDetails.hoursPerWeek,
+        preferredFormat: signupDetails.preferredFormat,
+        interests: signupDetails.interests,
+        baselineScores: { ...getActiveProfile().baselineScores, ...signupDetails.baselineScores },
+      } : {}),
+    });
+    let updatedProfile = initialProfile;
+    if (signupDetails?.goalPrompt) {
+      const parsedGoal = await parseNaturalLanguageGoal(signupDetails.goalPrompt, initialProfile);
+      updatedProfile = updateActiveProfile({
+        targetRoleId: parsedGoal.matchedRoleId,
+        targetRoleTitle: parsedGoal.targetRoleTitle,
+        currentSkillLevel: parsedGoal.suggestedSkillLevel,
+        hoursPerWeek: parsedGoal.suggestedHoursPerWeek,
+        preferredFormat: parsedGoal.preferredFormat,
+        targetTimelineMonths: parsedGoal.suggestedTimelineMonths,
+      });
+      const generatedRoadmap = generatePersonalizedRoadmap(updatedProfile, parsedGoal.matchedRoleId);
+      saveActiveRoadmap(generatedRoadmap);
+      setRoadmap(generatedRoadmap);
+    } else {
+      setRoadmap(getActiveRoadmap());
+    }
+    setProfile(updatedProfile);
     setIsAuthenticated(true);
     setIsAuthPageOpen(false);
+    setActiveTab('roadmap');
   };
 
   const handleLogout = () => {
@@ -358,7 +383,6 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeProfile={profile}
-        onOpenOnboarding={() => setIsOnboardingOpen(true)}
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -366,13 +390,6 @@ export const App: React.FC = () => {
 
       {/* Main Container View Switcher */}
       <main className="flex-1 pt-16 max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop">
-        {activeTab === 'landing' && (
-          <HeroLanding
-            onStartOnboarding={() => setIsOnboardingOpen(true)}
-            onExploreCurriculum={() => setActiveTab('catalog')}
-          />
-        )}
-
         {activeTab === 'roadmap' && roadmap && (
           <div className="pt-6">
             <RoadmapVisualizer
@@ -381,17 +398,6 @@ export const App: React.FC = () => {
               onToggleSubtopic={handleToggleSubtopic}
               onOpenAddCustomCourse={() => setIsAddCustomOpen(true)}
               onSelectMilestoneDetails={(m) => setSelectedMilestone(m)}
-            />
-          </div>
-        )}
-
-        {activeTab === 'dashboard' && (
-          <div className="pt-6">
-            <Dashboard
-              profile={profile}
-              roadmap={roadmap}
-              onOpenExportModal={() => setIsExportOpen(true)}
-              onLaunchNextBestAction={(m) => setSelectedMilestone(m)}
             />
           </div>
         )}
@@ -407,16 +413,12 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'assessment' && (
-          <AssessmentPage roadmap={roadmap} onAnswer={handleQuizCompleted} />
-        )}
-
-        {activeTab === 'toolkit' && (
-          <CareerToolkit profile={profile} roadmap={roadmap} onAnswer={handleQuizCompleted} />
-        )}
-
         {activeTab === 'career' && (
           <CareerHub profile={profile} roadmap={roadmap} onAnswer={handleQuizCompleted} />
+        )}
+
+        {activeTab === 'profile' && (
+          <ProfilePage profile={profile} roadmap={roadmap} />
         )}
       </main>
 
@@ -447,23 +449,11 @@ export const App: React.FC = () => {
       />
 
       {/* Mobile Bottom Navigation Bar (Design-faithful) */}
-      <nav className="md:hidden fixed bottom-0 w-full z-40 bg-surface/90 dark:bg-inverse-surface/90 backdrop-blur-lg border-t border-outline-variant/30 pb-safe px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-around items-center h-20">
-          <button
-            onClick={() => setActiveTab('landing')}
-            className={`flex flex-col items-center justify-center transition-all ${
-              activeTab === 'landing'
-                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
-                : 'text-on-surface-variant hover:text-secondary'
-            }`}
-          >
-            <Compass className="w-5 h-5 mb-1" />
-            <span className="font-label-sm text-[10px]">Home</span>
-          </button>
-
+      <nav className="md:hidden fixed bottom-0 w-full z-40 overflow-x-auto bg-surface/90 dark:bg-inverse-surface/90 backdrop-blur-lg border-t border-outline-variant/30 pb-safe px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="flex min-w-max justify-start gap-4 items-center h-20">
           <button
             onClick={() => setActiveTab('roadmap')}
-            className={`flex flex-col items-center justify-center transition-all ${
+            className={`flex min-w-[60px] shrink-0 flex-col items-center justify-center transition-all ${
               activeTab === 'roadmap'
                 ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
                 : 'text-on-surface-variant hover:text-secondary'
@@ -474,44 +464,8 @@ export const App: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center transition-all ${
-              activeTab === 'dashboard'
-                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
-                : 'text-on-surface-variant hover:text-secondary'
-            }`}
-          >
-            <BarChart3 className="w-5 h-5 mb-1" />
-            <span className="font-label-sm text-[10px]">Skills</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('assessment')}
-            className={`flex flex-col items-center justify-center transition-all ${
-              activeTab === 'assessment'
-                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
-                : 'text-on-surface-variant hover:text-secondary'
-            }`}
-          >
-            <ClipboardCheck className="w-5 h-5 mb-1" />
-            <span className="font-label-sm text-[10px]">Exam</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('toolkit')}
-            className={`flex flex-col items-center justify-center transition-all ${
-              activeTab === 'toolkit'
-                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
-                : 'text-on-surface-variant hover:text-secondary'
-            }`}
-          >
-            <FolderKanban className="w-5 h-5 mb-1" />
-            <span className="font-label-sm text-[10px]">Toolkit</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('career')}
-            className={`flex flex-col items-center justify-center transition-all ${
+            className={`flex min-w-[60px] shrink-0 flex-col items-center justify-center transition-all ${
               activeTab === 'career'
                 ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
                 : 'text-on-surface-variant hover:text-secondary'
@@ -522,8 +476,8 @@ export const App: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setIsOnboardingOpen(true)}
-            className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary"
+            onClick={() => setActiveTab('profile')}
+            className="flex min-w-[60px] shrink-0 flex-col items-center justify-center text-on-surface-variant hover:text-secondary"
           >
             <User className="w-5 h-5 mb-1" />
             <span className="font-label-sm text-[10px]">Profile</span>

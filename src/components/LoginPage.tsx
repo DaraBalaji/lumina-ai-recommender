@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { LearningFormat, SkillLevel } from '../types';
+import { TARGET_ROLES } from '../data/skillTaxonomy';
+
+export interface SignupDetails {
+  goalPrompt: string;
+  targetRoleId: string;
+  currentSkillLevel: SkillLevel;
+  hoursPerWeek: number;
+  preferredFormat: LearningFormat;
+  interests: string[];
+  baselineScores: Record<string, number>;
+}
 
 interface LoginPageProps {
-  onLogin: (name: string, email: string, password: string, mode: 'signin' | 'signup') => Promise<void>;
+  onLogin: (name: string, email: string, password: string, mode: 'signin' | 'signup', signupDetails?: SignupDetails) => Promise<void>;
   onBackToHome?: () => void;
 }
 
@@ -10,6 +22,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) =
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [goalPrompt, setGoalPrompt] = useState('');
+  const [targetRoleId, setTargetRoleId] = useState(TARGET_ROLES[0].id);
+  const [skillLevel, setSkillLevel] = useState<SkillLevel>('Beginner');
+  const [hoursPerWeek, setHoursPerWeek] = useState(5);
+  const [preferredFormat, setPreferredFormat] = useState<LearningFormat>('Project-first');
+  const [skillsInput, setSkillsInput] = useState('');
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +38,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) =
     setError('');
     setIsSubmitting(true);
     try {
-      await onLogin(name.trim(), email.trim(), password, mode);
+      const interests = skillsInput.split(',').map((skill) => skill.trim()).filter(Boolean);
+      const baselineScores = Object.fromEntries(interests.map((skill) => [skill, 35]));
+      await onLogin(name.trim(), email.trim(), password, mode, mode === 'signup' ? {
+        goalPrompt: goalPrompt.trim(),
+        targetRoleId,
+        currentSkillLevel: skillLevel,
+        hoursPerWeek,
+        preferredFormat,
+        interests,
+        baselineScores,
+      } : undefined);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Could not connect to the local database.');
     } finally {
@@ -59,6 +87,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome }) =
             Name
             <input required value={name} onChange={(event) => setName(event.target.value)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface" placeholder="Your name" />
           </label>}
+          {mode === 'signup' && <>
+            <label className="text-xs font-semibold text-on-surface-variant">What learning path do you want to create?
+              <textarea required value={goalPrompt} onChange={(event) => setGoalPrompt(event.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface" placeholder="Example: Become an AI engineer and build production LLM applications" />
+            </label>
+            <label className="text-xs font-semibold text-on-surface-variant">Target role
+              <select value={targetRoleId} onChange={(event) => setTargetRoleId(event.target.value)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface">
+                {TARGET_ROLES.map((role) => <option key={role.id} value={role.id}>{role.title}</option>)}
+              </select>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs font-semibold text-on-surface-variant">Current level
+                <select value={skillLevel} onChange={(event) => setSkillLevel(event.target.value as SkillLevel)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface">
+                  <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-on-surface-variant">Hours / week
+                <input type="number" min="1" max="80" value={hoursPerWeek} onChange={(event) => setHoursPerWeek(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface" />
+              </label>
+            </div>
+            <label className="text-xs font-semibold text-on-surface-variant">Preferred learning format
+              <select value={preferredFormat} onChange={(event) => setPreferredFormat(event.target.value as LearningFormat)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface">
+                <option>Project-first</option><option>Video</option><option>Theoretical</option><option>Books</option>
+              </select>
+            </label>
+            <label className="text-xs font-semibold text-on-surface-variant">Current skills or interests
+              <input value={skillsInput} onChange={(event) => setSkillsInput(event.target.value)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface" placeholder="Python, SQL, cloud (comma separated)" />
+            </label>
+          </>}
           <label className="text-xs font-semibold text-on-surface-variant">
             Email
             <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-xl border border-outline-variant/40 p-3 text-sm bg-surface-container-lowest dark:bg-inverse-surface text-on-surface" placeholder="you@example.com" />
