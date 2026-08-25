@@ -118,8 +118,19 @@ export const App: React.FC = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
     });
-    const result = await response.json();
+    const responseText = await response.text();
+    let result: { error?: string; user?: { id: string; name: string; email: string } } = {};
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      throw new Error(
+        response.ok
+          ? 'The authentication service returned an invalid response.'
+          : 'Vercel authentication failed. Check MONGODB_URI and MONGODB_DB_NAME in Vercel environment variables.'
+      );
+    }
     if (!response.ok) throw new Error(result.error || 'Authentication failed.');
+    if (!result.user) throw new Error('Authentication service returned no user.');
     localStorage.setItem('lumina_authenticated', 'true');
     localStorage.setItem('lumina_account_id', result.user.id);
     localStorage.setItem('lumina_account_email', result.user.email);
