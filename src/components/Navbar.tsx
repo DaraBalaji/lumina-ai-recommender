@@ -9,10 +9,11 @@ import {
   Plus,
   LogOut,
   ClipboardCheck,
+  FolderKanban,
 } from 'lucide-react';
 import { LearnerProfile } from '../types';
 
-export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment';
+export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment' | 'toolkit';
 
 interface NavbarProps {
   activeTab: AppTab;
@@ -110,6 +111,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <ClipboardCheck className="w-4 h-4" />
             Assessment
+          </button>
+          <button
+            onClick={() => setActiveTab('toolkit')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+              activeTab === 'toolkit'
+                ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
+            }`}
+          >
+            <FolderKanban className="w-4 h-4" />
+            Toolkit
           </button>
         </nav>
 

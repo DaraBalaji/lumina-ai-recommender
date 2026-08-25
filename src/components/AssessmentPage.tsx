@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Award, CheckCircle2, ChevronRight, ClipboardCheck, RotateCcw, XCircle } from 'lucide-react';
-import { Milestone, Roadmap } from '../types';
+import { Roadmap } from '../types';
 
 interface AssessmentPageProps {
   roadmap: Roadmap | null;
@@ -14,24 +14,47 @@ interface AssessmentQuestion {
   answer: number;
 }
 
-const questionForTopic = (topic: string): AssessmentQuestion => {
+const questionsForTopic = (topic: string): AssessmentQuestion[] => {
   const normalizedTopic = topic.toLowerCase();
   if (normalizedTopic.includes('python')) {
-    return { topic, prompt: 'Which Python structure stores values as key and value pairs?', options: ['A list', 'A dictionary', 'A tuple'], answer: 1 };
+    return [
+      { topic, prompt: 'A function receives a list and must update its contents for the caller. Which behavior makes this possible?', options: ['Mutating the list object', 'Reassigning a local variable only', 'Converting it to a string'], answer: 0 },
+      { topic, prompt: 'Why is a dictionary usually preferable to scanning a list when looking up a value by unique identifier?', options: ['Average constant-time lookup', 'It always preserves numeric order', 'It prevents all duplicate values'], answer: 0 },
+      { topic, prompt: 'A Python generator is useful when processing a very large file because it:', options: ['Yields items lazily without loading everything into memory', 'Automatically runs code in parallel', 'Converts every line into a database table'], answer: 0 },
+    ];
   }
   if (normalizedTopic.includes('javascript') || normalizedTopic.includes('typescript')) {
-    return { topic, prompt: 'What does a TypeScript interface primarily describe?', options: ['The shape of an object', 'A database query', 'A CSS animation'], answer: 0 };
+    return [
+      { topic, prompt: 'A React component reads a value from a closure created during an earlier render. What issue can occur in an async callback?', options: ['It can observe stale state', 'It automatically mutates props', 'It disables TypeScript'], answer: 0 },
+      { topic, prompt: 'What does a TypeScript discriminated union allow a program to do safely?', options: ['Narrow a value to a specific variant using a shared literal field', 'Skip runtime validation for network data', 'Treat every object as the same shape'], answer: 0 },
+      { topic, prompt: 'Why should a list-rendered React element have a stable key?', options: ['So React can match items correctly across updates', 'So the browser can encrypt the component', 'So CSS automatically becomes responsive'], answer: 0 },
+    ];
   }
   if (normalizedTopic.includes('machine learning') || normalizedTopic.includes('scikit')) {
-    return { topic, prompt: 'What is a model trained on during supervised learning?', options: ['Labeled examples', 'Only deployment logs', 'Random UI colors'], answer: 0 };
+    return [
+      { topic, prompt: 'A model performs well on training data but poorly on unseen examples. Which diagnosis is most likely?', options: ['Overfitting', 'Underflow', 'Data serialization'], answer: 0 },
+      { topic, prompt: 'Why should a scaler be fitted only on the training split?', options: ['To prevent information from the validation or test set leaking into training', 'To guarantee every model is linear', 'To remove the need for a test set'], answer: 0 },
+      { topic, prompt: 'For an imbalanced binary classifier, why can accuracy be misleading?', options: ['A majority-class model can score highly while missing the minority class', 'Accuracy only works for regression', 'Accuracy automatically changes the decision threshold'], answer: 0 },
+    ];
   }
   if (normalizedTopic.includes('transformer') || normalizedTopic.includes('attention')) {
-    return { topic, prompt: 'What does self-attention help a transformer identify?', options: ['Relationships between tokens', 'The size of a hard drive', 'A webpage color'], answer: 0 };
+    return [
+      { topic, prompt: 'In self-attention, what determines how strongly one token incorporates information from another?', options: ['The softmax-normalized query-key compatibility scores', 'The order of files on disk', 'The number of output classes'], answer: 0 },
+      { topic, prompt: 'Why are positional encodings needed in a standard transformer?', options: ['Attention alone does not inherently represent token order', 'They reduce every sequence to one token', 'They replace the feed-forward network'], answer: 0 },
+      { topic, prompt: 'What is the purpose of a causal attention mask during autoregressive generation?', options: ['Prevent a token from attending to future tokens', 'Force all tokens to share one embedding', 'Remove the need for tokenization'], answer: 0 },
+    ];
   }
   if (normalizedTopic.includes('cloud') || normalizedTopic.includes('docker')) {
-    return { topic, prompt: 'What is the main benefit of containerizing an application?', options: ['Consistent runtime environments', 'Removing all tests', 'Making passwords public'], answer: 0 };
+    return [
+      { topic, prompt: 'A service works locally but fails in production because a library version differs. Which practice addresses this most directly?', options: ['Pin dependencies and build an immutable artifact', 'Add more UI animations', 'Store credentials in source control'], answer: 0 },
+      { topic, prompt: 'What is the main operational difference between horizontal and vertical scaling?', options: ['Horizontal adds instances; vertical increases resources on an instance', 'Horizontal always means database migration', 'Vertical scaling requires no downtime in every system'], answer: 0 },
+      { topic, prompt: 'Why should a container run as a non-root user when possible?', options: ['It limits the impact of a process compromise', 'It makes network latency zero', 'It removes the need for image scanning'], answer: 0 },
+    ];
   }
-  return { topic, prompt: `Which statement best describes ${topic}?`, options: [`It is a core concept used in ${topic}`, 'It is unrelated to software development', 'It only applies to graphic design'], answer: 0 };
+  return [
+    { topic, prompt: `Which scenario demonstrates applying ${topic} rather than only memorizing its definition?`, options: [`Selecting ${topic} to solve a concrete engineering problem`, 'Ignoring requirements and guessing', 'Removing tests before deployment'], answer: 0 },
+    { topic, prompt: `A teammate is learning ${topic}. Which evidence best demonstrates understanding?`, options: ['Explaining a tradeoff and applying it in a small project', 'Repeating a term without an example', 'Copying output without checking assumptions'], answer: 0 },
+  ];
 };
 
 export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswer }) => {
@@ -49,7 +72,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ roadmap, onAnswe
 
   const questions = useMemo(() => {
     const topics = selectedTopic === 'all' ? coveredTopics : [selectedTopic];
-    return topics.slice(0, 5).map(questionForTopic);
+    return topics.flatMap(questionsForTopic);
   }, [coveredTopics, selectedTopic]);
 
   const currentQuestion = questions[questionIndex];

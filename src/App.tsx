@@ -8,6 +8,7 @@ import {
   X,
   ExternalLink,
   ClipboardCheck,
+  FolderKanban,
 } from 'lucide-react';
 import {
   LearnerProfile,
@@ -44,6 +45,7 @@ import { AddCustomCourseModal } from './components/AddCustomCourseModal';
 import { LoginPage } from './components/LoginPage';
 import { calculateLearningMetrics } from './services/learningMetrics';
 import { AssessmentPage } from './components/AssessmentPage';
+import { CareerToolkit } from './components/CareerToolkit';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
@@ -406,6 +408,10 @@ export const App: React.FC = () => {
         {activeTab === 'assessment' && (
           <AssessmentPage roadmap={roadmap} onAnswer={handleQuizCompleted} />
         )}
+
+        {activeTab === 'toolkit' && (
+          <CareerToolkit profile={profile} roadmap={roadmap} onAnswer={handleQuizCompleted} />
+        )}
       </main>
 
       {/* Floating Lumina Assistant Launcher Button */}
@@ -483,6 +489,18 @@ export const App: React.FC = () => {
           >
             <ClipboardCheck className="w-5 h-5 mb-1" />
             <span className="font-label-sm text-[10px]">Exam</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('toolkit')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'toolkit'
+                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
+                : 'text-on-surface-variant hover:text-secondary'
+            }`}
+          >
+            <FolderKanban className="w-5 h-5 mb-1" />
+            <span className="font-label-sm text-[10px]">Toolkit</span>
           </button>
 
           <button
