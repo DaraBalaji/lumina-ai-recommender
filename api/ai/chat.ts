@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
-import { bodyOf, json } from '../_lib/server';
+import { bodyOf, json } from '../_lib/server.js';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST') return json(response, 405, { error: 'Method not allowed.' });

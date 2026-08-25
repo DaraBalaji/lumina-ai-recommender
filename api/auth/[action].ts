@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { bodyOf, getDatabase, hashPassword, idOf, json, validPassword } from '../_lib/server';
+import { bodyOf, getDatabase, hashPassword, idOf, json, validPassword } from '../_lib/server.js';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST' || !['signin', 'signup'].includes(String(request.query.action))) return json(response, 405, { error: 'Method not allowed.' });
