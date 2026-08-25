@@ -129,6 +129,37 @@ export const sendLuminaChatMessage = async (
   profile: LearnerProfile,
   activeMilestone?: Milestone | null
 ): Promise<ChatMessage> => {
+  const textLower = userMessageText.toLowerCase();
+  const wantsQuiz = textLower.includes('quiz') || textLower.includes('test me') || textLower.includes('practice');
+
+  const createDynamicQuiz = (): ChatMessage => {
+    const skill = activeMilestone?.skillsGained?.[0] || profile.interests?.[0] || 'the active learning topic';
+    const courseTitle = activeMilestone?.course.title || profile.targetRoleTitle;
+    const quiz: PracticeQuiz = {
+      id: `quiz-${Date.now()}`,
+      topic: skill,
+      question: `While studying ${courseTitle}, which approach best demonstrates practical understanding of ${skill}?`,
+      options: [
+        `Apply ${skill} to a small, testable project and evaluate the result`,
+        'Memorize the definition without implementing it',
+        'Skip validation because the first output looks correct',
+        'Replace the concept with an unrelated tool',
+      ],
+      correctAnswerIndex: 0,
+      explanation: `Practical application plus validation provides evidence that you understand ${skill} beyond recalling terminology.`,
+    };
+    return {
+      id: `msg-${Date.now()}`,
+      sender: 'assistant',
+      text: `I generated a practice question for **${skill}**, based on your current milestone **${courseTitle}**. Select the best answer below:`,
+      timestamp: new Date().toISOString(),
+      quiz,
+      suggestions: ['Explain the answer', 'Give me a harder question', 'What should I study next?'],
+    };
+  };
+
+  if (wantsQuiz) return createDynamicQuiz();
+
   // First, attempt server-side proxy call to /api/ai/chat (recommended for browser clients)
   if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
     try {
@@ -199,7 +230,16 @@ Respond concisely in clean markdown with helpful analogies, actionable guidance,
   }
 
   // Local AI Tutor Fallback Response System
-  const textLower = userMessageText.toLowerCase();
+
+  if (textLower.includes('rag') || textLower.includes('retrieval augmented')) {
+    return {
+      id: `msg-${Date.now()}`,
+      sender: 'assistant',
+      text: `### What is RAG?\n\n**RAG** means **Retrieval-Augmented Generation**. It combines search with a language model:\n\n1. **Retrieve** relevant passages from a trusted document or vector database.\n2. **Augment** the user prompt with those passages as context.\n3. **Generate** an answer grounded in that retrieved context.\n\nRAG helps keep answers current, reduces hallucinations, and lets an AI assistant work with private documents without retraining the model. A typical pipeline uses document chunking, embeddings, vector search, reranking, and citation-aware generation.`,
+      timestamp: new Date().toISOString(),
+      suggestions: ['Test me with a RAG quiz', 'Explain vector databases', 'Show a RAG pipeline'],
+    };
+  }
 
   if (textLower.includes('like i am 5') || textLower.includes('eli5') || textLower.includes('simple analogy')) {
     const topic = activeMilestone ? activeMilestone.title : profile.targetRoleTitle;
@@ -209,26 +249,6 @@ Respond concisely in clean markdown with helpful analogies, actionable guidance,
       text: `### 🧠 Simple Analogy: ${topic}\n\nImagine you are running a super-busy restaurant kitchen:\n- **The Raw Ingredients** are your input data or prompt vectors.\n- **The Master Chef** is the Neural Network / Attention Mechanism choosing which ingredients matter most.\n- **The Plated Meal** is the generated response or model output!\n\nInstead of checking every single cookbook from page 1 to 500, the chef uses a **smart index (Vector DB / Attention)** to immediately grab only the top 3 relevant recipes!`,
       timestamp: new Date().toISOString(),
       suggestions: ['Test me with a quiz', 'Give a code example', 'Next milestone recommendation'],
-    };
-  }
-
-  if (textLower.includes('quiz') || textLower.includes('test me') || textLower.includes('practice')) {
-    const quiz: PracticeQuiz = {
-      id: `quiz-${Date.now()}`,
-      topic: activeMilestone ? activeMilestone.title : 'Generative AI & RAG Concepts',
-      question: 'Which vector database index structure offers sub-linear approximate nearest neighbor (ANN) retrieval by building hierarchical graph layers?',
-      options: ['Flat L2 Index', 'HNSW (Hierarchical Navigable Small World)', 'B-Tree Index', 'Inverted File Index (IVF) without quantization'],
-      correctAnswerIndex: 1,
-      explanation: 'HNSW builds multi-layer skip-list-like graphs where top layers allow fast long-distance routing and lower layers refine local nearest neighbors with high recall.',
-    };
-
-    return {
-      id: `msg-${Date.now()}`,
-      sender: 'assistant',
-      text: `I have generated an active-recall practice quiz on **${quiz.topic}** for you! Select your answer below:`,
-      timestamp: new Date().toISOString(),
-      quiz,
-      suggestions: ['Explain HNSW graph layering', 'Give another question', 'Resume roadmap'],
     };
   }
 
