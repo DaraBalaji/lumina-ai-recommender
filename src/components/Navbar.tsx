@@ -10,10 +10,11 @@ import {
   LogOut,
   ClipboardCheck,
   FolderKanban,
+  BriefcaseBusiness,
 } from 'lucide-react';
 import { LearnerProfile } from '../types';
 
-export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment' | 'toolkit';
+export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment' | 'toolkit' | 'career';
 
 interface NavbarProps {
   activeTab: AppTab;
@@ -122,6 +123,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <FolderKanban className="w-4 h-4" />
             Toolkit
+          </button>
+          <button
+            onClick={() => setActiveTab('career')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+              activeTab === 'career'
+                ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
+            }`}
+          >
+            <BriefcaseBusiness className="w-4 h-4" />
+            Career Hub
           </button>
         </nav>
 
