@@ -135,7 +135,7 @@ export default defineConfig(({ mode }) => {
           }
           const client = await connectMongo();
           const database = client.db(mongoDbName);
-          const rooms = database.collection('studyRooms');
+          const rooms = database.collection<any>('studyRooms');
           const users = database.collection('users');
 
           if (req.method === 'GET') {
@@ -163,7 +163,7 @@ export default defineConfig(({ mode }) => {
           }
 
           const roomId = String(payload.roomId || '').trim();
-          const room = await rooms.findOne({ id: roomId });
+          const room = await rooms.findOne({ id: roomId }) as any;
           if (!room) {
             res.statusCode = 404;
             res.end(JSON.stringify({ error: 'Study room not found.' }));
@@ -178,19 +178,19 @@ export default defineConfig(({ mode }) => {
               res.end(JSON.stringify({ error: 'No registered account uses that email.' }));
               return;
             }
-            if (room.members.some((member) => member.userId === friend._id.toString()) || room.requests.some((request) => request.userId === friend._id.toString())) {
+            if (room.members.some((member: any) => member.userId === friend._id.toString()) || room.requests.some((request: any) => request.userId === friend._id.toString())) {
               res.statusCode = 409;
               res.end(JSON.stringify({ error: 'That learner is already a member or has a pending request.' }));
               return;
             }
-            await rooms.updateOne({ id: roomId }, { $push: { requests: { userId: friend._id.toString(), email, name: friend.name, invitedBy: userId, createdAt: new Date() } } });
+            await rooms.updateOne({ id: roomId }, { $push: { requests: { userId: friend._id.toString(), email, name: friend.name, invitedBy: userId, createdAt: new Date() } } } as any);
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ sent: true }));
             return;
           }
 
           if (req.method === 'POST' && payload.action === 'message') {
-            const isMember = room.members.some((member) => member.userId === userId && member.status === 'accepted');
+            const isMember = room.members.some((member: any) => member.userId === userId && member.status === 'accepted');
             if (!isMember) {
               res.statusCode = 403;
               res.end(JSON.stringify({ error: 'Only accepted members can post messages.' }));
@@ -203,14 +203,14 @@ export default defineConfig(({ mode }) => {
               res.end(JSON.stringify({ error: 'Message cannot be empty.' }));
               return;
             }
-            await rooms.updateOne({ id: roomId }, { $push: { messages: message } });
+            await rooms.updateOne({ id: roomId }, { $push: { messages: message } } as any);
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ message }));
             return;
           }
 
           if (req.method === 'PATCH' && payload.action === 'respond') {
-            const request = room.requests.find((item) => item.userId === userId);
+            const request = room.requests.find((item: any) => item.userId === userId);
             if (!request || !['accepted', 'rejected'].includes(payload.status)) {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: 'Invalid study room request.' }));
@@ -219,7 +219,7 @@ export default defineConfig(({ mode }) => {
             const updates = payload.status === 'accepted'
               ? { $pull: { requests: { userId } }, $push: { members: { userId, email: request.email, name: request.name, status: 'accepted' } } }
               : { $pull: { requests: { userId } } };
-            await rooms.updateOne({ id: roomId }, updates);
+            await rooms.updateOne({ id: roomId }, updates as any);
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ updated: true }));
             return;
