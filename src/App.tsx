@@ -7,6 +7,7 @@ import {
   User,
   X,
   ExternalLink,
+  ClipboardCheck,
 } from 'lucide-react';
 import {
   LearnerProfile,
@@ -31,7 +32,7 @@ import {
   loadRemoteWorkspace,
 } from './services/dbService';
 import { generatePersonalizedRoadmap } from './services/recommendationEngine';
-import { Navbar } from './components/Navbar';
+import { AppTab, Navbar } from './components/Navbar';
 import { HeroLanding } from './components/HeroLanding';
 import { OnboardingModal } from './components/OnboardingModal';
 import { RoadmapVisualizer } from './components/RoadmapVisualizer';
@@ -42,11 +43,12 @@ import { ExportModal } from './components/ExportModal';
 import { AddCustomCourseModal } from './components/AddCustomCourseModal';
 import { LoginPage } from './components/LoginPage';
 import { calculateLearningMetrics } from './services/learningMetrics';
+import { AssessmentPage } from './components/AssessmentPage';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('lumina_authenticated') === 'true');
   const [isAuthPageOpen, setIsAuthPageOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'landing' | 'roadmap' | 'dashboard' | 'catalog'>('landing');
+  const [activeTab, setActiveTab] = useState<AppTab>('landing');
   const [profile, setProfile] = useState<LearnerProfile>(getActiveProfile);
   const [roadmap, setRoadmap] = useState<Roadmap | null>(getActiveRoadmap);
   const [theme, setTheme] = useState<'light' | 'dark'>(getTheme);
@@ -400,6 +402,10 @@ export const App: React.FC = () => {
             />
           </div>
         )}
+
+        {activeTab === 'assessment' && (
+          <AssessmentPage roadmap={roadmap} onAnswer={handleQuizCompleted} />
+        )}
       </main>
 
       {/* Floating Lumina Assistant Launcher Button */}
@@ -465,6 +471,18 @@ export const App: React.FC = () => {
           >
             <BarChart3 className="w-5 h-5 mb-1" />
             <span className="font-label-sm text-[10px]">Skills</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('assessment')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'assessment'
+                ? 'text-secondary bg-secondary-container/30 rounded-xl px-3 py-1 scale-90 font-bold'
+                : 'text-on-surface-variant hover:text-secondary'
+            }`}
+          >
+            <ClipboardCheck className="w-5 h-5 mb-1" />
+            <span className="font-label-sm text-[10px]">Exam</span>
           </button>
 
           <button

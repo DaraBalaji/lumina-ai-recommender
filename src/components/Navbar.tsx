@@ -8,12 +8,15 @@ import {
   Moon,
   Plus,
   LogOut,
+  ClipboardCheck,
 } from 'lucide-react';
 import { LearnerProfile } from '../types';
 
+export type AppTab = 'landing' | 'roadmap' | 'dashboard' | 'catalog' | 'assessment';
+
 interface NavbarProps {
-  activeTab: 'landing' | 'roadmap' | 'dashboard' | 'catalog';
-  setActiveTab: (tab: 'landing' | 'roadmap' | 'dashboard' | 'catalog') => void;
+  activeTab: AppTab;
+  setActiveTab: (tab: AppTab) => void;
   activeProfile: LearnerProfile;
   onOpenOnboarding: () => void;
   onLogout: () => void;
@@ -96,6 +99,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Compass className="w-4 h-4" />
             150+ Catalog
+          </button>
+          <button
+            onClick={() => setActiveTab('assessment')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+              activeTab === 'assessment'
+                ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/40'
+            }`}
+          >
+            <ClipboardCheck className="w-4 h-4" />
+            Assessment
           </button>
         </nav>
 
