@@ -28,6 +28,7 @@ import {
   saveStudyRecords,
   saveChatHistory,
   loadRemoteWorkspace,
+  createNewProfile,
 } from './services/dbService';
 import { generatePersonalizedRoadmap } from './services/recommendationEngine';
 import { AppTab, Navbar } from './components/Navbar';
@@ -43,6 +44,7 @@ import { calculateLearningMetrics } from './services/learningMetrics';
 import { CareerHub } from './components/CareerHub';
 import { ProfilePage } from './components/ProfilePage';
 import { TARGET_ROLES } from './data/skillTaxonomy';
+import { INITIAL_DEFAULT_PROFILE } from './data/sampleProfiles';
 import { parseNaturalLanguageGoal } from './services/aiService';
 
 export const App: React.FC = () => {
@@ -134,7 +136,15 @@ export const App: React.FC = () => {
     localStorage.setItem('lumina_authenticated', 'true');
     localStorage.setItem('lumina_account_id', result.user.id);
     localStorage.setItem('lumina_account_email', result.user.email);
-    await loadRemoteWorkspace(result.user.id);
+    const remoteWorkspace = await loadRemoteWorkspace(result.user.id);
+    if (mode === 'signup' && !remoteWorkspace) {
+      createNewProfile({
+        ...INITIAL_DEFAULT_PROFILE,
+        id: result.user.id,
+        name: result.user.name,
+        lastActiveDate: new Date().toISOString(),
+      });
+    }
     saveChatHistory([]);
     setAssistantSessionKey((currentKey) => currentKey + 1);
     const signupRole = signupDetails && TARGET_ROLES.find((role) => role.id === signupDetails.targetRoleId);
@@ -147,25 +157,29 @@ export const App: React.FC = () => {
         hoursPerWeek: signupDetails.hoursPerWeek,
         preferredFormat: signupDetails.preferredFormat,
         interests: signupDetails.interests,
+        goalText: signupDetails.goalPrompt,
         baselineScores: { ...getActiveProfile().baselineScores, ...signupDetails.baselineScores },
       } : {}),
     });
     let updatedProfile = initialProfile;
     if (signupDetails?.goalPrompt) {
       const parsedGoal = await parseNaturalLanguageGoal(signupDetails.goalPrompt, initialProfile);
+      const selectedRole = TARGET_ROLES.find((role) => role.id === signupDetails.targetRoleId);
       updatedProfile = updateActiveProfile({
-        targetRoleId: parsedGoal.matchedRoleId,
-        targetRoleTitle: parsedGoal.targetRoleTitle,
+        targetRoleId: signupDetails.targetRoleId,
+        targetRoleTitle: selectedRole?.title || parsedGoal.targetRoleTitle,
         currentSkillLevel: parsedGoal.suggestedSkillLevel,
         hoursPerWeek: parsedGoal.suggestedHoursPerWeek,
         preferredFormat: parsedGoal.preferredFormat,
         targetTimelineMonths: parsedGoal.suggestedTimelineMonths,
       });
-      const generatedRoadmap = generatePersonalizedRoadmap(updatedProfile, parsedGoal.matchedRoleId);
+      const generatedRoadmap = generatePersonalizedRoadmap(updatedProfile, signupDetails.targetRoleId);
       saveActiveRoadmap(generatedRoadmap);
       setRoadmap(generatedRoadmap);
     } else {
-      setRoadmap(getActiveRoadmap());
+      const generatedRoadmap = generatePersonalizedRoadmap(initialProfile, signupDetails?.targetRoleId);
+      saveActiveRoadmap(generatedRoadmap);
+      setRoadmap(generatedRoadmap);
     }
     setProfile(updatedProfile);
     setIsAuthenticated(true);
